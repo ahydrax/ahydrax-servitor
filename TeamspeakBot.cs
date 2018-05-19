@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -22,14 +24,22 @@ namespace ahydrax_servitor
             _settings = settings;
             _logger = logger;
 
-            _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, 10011);
+            _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, _settings.TeamspeakPort);
         }
 
         public async Task Start()
         {
             _logger.LogInformation("Starting teamspeak client...");
-            await _teamSpeakClient.Connect();
-            await _teamSpeakClient.Login(_settings.TeamspeakUsername, _settings.TeamspeakPassword);
+            try
+            {
+
+                await _teamSpeakClient.Connect();
+                await _teamSpeakClient.Login(_settings.TeamspeakUsername, _settings.TeamspeakPassword);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Unable to connect to {_settings.TeamspeakHost}");
+            }
 
             _logger.LogInformation("Teamspeak bot connected");
 
@@ -44,22 +54,26 @@ namespace ahydrax_servitor
 
             await _teamSpeakClient.RegisterServerNotification();
 
-            _teamSpeakClient.Subscribe<ClientEnterView>(collection =>
-            {
-                foreach (var clientEnterView in collection)
-                {
-                    _communicator.NotifyTelegramChannelUserJoined(clientEnterView.NickName);
-                    _nicknames.AddOrUpdate(clientEnterView.Id, clientEnterView.NickName, (i, s) => clientEnterView.NickName);
-                }
-            });
+            _teamSpeakClient.Subscribe<ClientEnterView>(UserEntered);
 
-            _teamSpeakClient.Subscribe<ClientLeftView>(views =>
+            _teamSpeakClient.Subscribe<ClientLeftView>(UserLeft);
+        }
+
+        private void UserLeft(IReadOnlyCollection<ClientLeftView> views)
+        {
+            foreach (var clientLeftView in views)
             {
-                foreach (var clientLeftView in views)
-                {
-                    _communicator.NotifyTelegramChannelUserLeft(_nicknames[clientLeftView.Id]);
-                }
-            });
+                _communicator.NotifyTelegramChannelUserLeft(_nicknames[clientLeftView.Id]);
+            }
+        }
+
+        private void UserEntered(IReadOnlyCollection<ClientEnterView> collection)
+        {
+            foreach (var clientEnterView in collection)
+            {
+                _communicator.NotifyTelegramChannelUserJoined(clientEnterView.NickName);
+                _nicknames.AddOrUpdate(clientEnterView.Id, clientEnterView.NickName, (i, s) => clientEnterView.NickName);
+            }
         }
 
         public async Task<string[]> AskTeamspeakWhoIsInChat()
@@ -67,7 +81,5 @@ namespace ahydrax_servitor
             var clients = await _teamSpeakClient.GetClients();
             return clients.Select(x => x.NickName).Where(x => !x.Contains(" from ")).ToArray();
         }
-
-
     }
 }

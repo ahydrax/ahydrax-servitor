@@ -13,7 +13,7 @@ namespace ahydrax_servitor
             _teamspeakBot = teamspeakBot;
 
             _telegramBot.Start();
-            _teamspeakBot.Start().Wait();
+            _teamspeakBot.Start().GetAwaiter().GetResult();
         }
 
         public async Task<string[]> AskTeamspeakWhoIsInChat()

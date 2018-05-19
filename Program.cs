@@ -30,6 +30,7 @@ namespace ahydrax_servitor
                 AllowedChatId = long.Parse(configuration[nameof(BotSettings.AllowedChatId)]),
                 TelegramBotApiKey = configuration[nameof(BotSettings.TelegramBotApiKey)],
                 TeamspeakHost = configuration[nameof(BotSettings.TeamspeakHost)],
+                TeamspeakPort = int.Parse(configuration[nameof(BotSettings.TeamspeakPort)]),
                 TeamspeakUsername = configuration[nameof(BotSettings.TeamspeakUsername)],
                 TeamspeakPassword = configuration[nameof(BotSettings.TeamspeakPassword)]
             };
