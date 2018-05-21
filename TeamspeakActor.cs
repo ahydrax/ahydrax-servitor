@@ -76,8 +76,13 @@ namespace ahydrax_servitor
             try
             {
                 var clients = await _teamSpeakClient.GetClients();
-                var clientNicknames = clients.Where(x => x.Type == ClientType.FullClient).Select(x => x.NickName).ToArray();
-                var message = string.Join(',', clientNicknames);
+                var clientNicknames = clients
+                    .Where(x => x.Type == ClientType.FullClient)
+                    .Select(x => x.NickName)
+                    .OrderBy(x => x)
+                    .ToArray();
+
+                var message = "``\r\n" + string.Join("\r\n", clientNicknames) + "``";
 
                 GetTelegramActor().Tell(new NotifyChat(arg.ChatId, message));
             }
