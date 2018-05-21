@@ -42,11 +42,11 @@ namespace ahydrax_servitor
 
             using (var system = ActorSystem.Create("ahydrax-servitor"))
             {
-                var a = system.ActorOf(
+                system.ActorOf(
                     Props.Create(() => new TelegramActor(settings, system, loggerFactory.CreateLogger<TelegramActor>())),
                     nameof(TelegramActor));
 
-                var b = system.ActorOf(
+                system.ActorOf(
                     Props.Create(() => new TeamspeakActor(settings, system, loggerFactory.CreateLogger<TeamspeakActor>())),
                     nameof(TeamspeakActor));
 
