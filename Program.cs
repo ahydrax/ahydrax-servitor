@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Akka.Actor;
-using Akka.Configuration;
-using DryIoc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Telegram.Bot;
 
 namespace ahydrax_servitor
 {
@@ -14,13 +10,9 @@ namespace ahydrax_servitor
     {
         private static readonly AutoResetEvent ProgramExitEvent = new AutoResetEvent(false);
         private static ILogger _logger;
-        private static TelegramBot _telegramActor;
-        private static TeamspeakBot _teamspeakBot;
 
         static void Main(string[] args)
         {
-            var container = SetupContainer();
-
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
 
             var loggerFactory = new LoggerFactory()
@@ -30,70 +22,42 @@ namespace ahydrax_servitor
 #endif
                 ;
 
-            _logger = loggerFactory.CreateLogger("main");
+            _logger = loggerFactory.CreateLogger(nameof(Program));
 
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsecrets.json")
                 .Build();
 
-            var settings = new BotSettings
+            var settings = new Settings
             {
-                AllowedChatId = long.Parse(configuration[nameof(BotSettings.AllowedChatId)]),
-                LarisId = long.Parse(configuration[nameof(BotSettings.LarisId)]),
-                TelegramBotApiKey = configuration[nameof(BotSettings.TelegramBotApiKey)],
-                TeamspeakHost = configuration[nameof(BotSettings.TeamspeakHost)],
-                TeamspeakPort = int.Parse(configuration[nameof(BotSettings.TeamspeakPort)]),
-                TeamspeakUsername = configuration[nameof(BotSettings.TeamspeakUsername)],
-                TeamspeakPassword = configuration[nameof(BotSettings.TeamspeakPassword)]
+                AllowedChatId = long.Parse(configuration[nameof(Settings.AllowedChatId)]),
+                LarisId = long.Parse(configuration[nameof(Settings.LarisId)]),
+                TelegramBotApiKey = configuration[nameof(Settings.TelegramBotApiKey)],
+                TeamspeakHost = configuration[nameof(Settings.TeamspeakHost)],
+                TeamspeakPort = int.Parse(configuration[nameof(Settings.TeamspeakPort)]),
+                TeamspeakUsername = configuration[nameof(Settings.TeamspeakUsername)],
+                TeamspeakPassword = configuration[nameof(Settings.TeamspeakPassword)]
             };
             _logger.LogInformation("Settings initialized");
 
-            var communicator = new Communicator();
-
-            _telegramActor = new TelegramBot(communicator, settings, loggerFactory.CreateLogger<TelegramBot>());
-            _teamspeakBot = new TeamspeakBot(communicator, settings, loggerFactory.CreateLogger<TeamspeakBot>());
-
-            _logger.LogInformation("Starting bots...");
-            Task.Run(() =>
-            {
-                communicator.StartBotsAndCommunication(_telegramActor, _teamspeakBot);
-                _logger.LogInformation("Bots started");
-            });
-
             using (var system = ActorSystem.Create("ahydrax-servitor"))
             {
-                var a = system.ActorOf<TelegramActor>();
-                a.Tell(new TelegramStart { ApiKey = settings.TelegramBotApiKey });
+                var a = system.ActorOf(
+                    Props.Create(() => new TelegramActor(settings, system, loggerFactory.CreateLogger<TelegramActor>())),
+                    nameof(TelegramActor));
 
+                var b = system.ActorOf(
+                    Props.Create(() => new TeamspeakActor(settings, system, loggerFactory.CreateLogger<TeamspeakActor>())),
+                    nameof(TeamspeakActor));
 
                 ProgramExitEvent.WaitOne();
             }
-
-        }
-
-        private static Container SetupContainer()
-        {
-            var c = new Container();
-
-
-            return c;
         }
 
         private static void ConsoleOnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            _telegramActor.Stop();
             ProgramExitEvent.Set();
             e.Cancel = true;
         }
-    }
-
-
-    internal class TelegramStop
-    {
-    }
-
-    internal class TelegramStart
-    {
-        public string ApiKey { get; set; }
     }
 }

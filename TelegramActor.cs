@@ -12,7 +12,8 @@ namespace ahydrax_servitor
 {
     public class TelegramActor : ReceiveActor
     {
-        private readonly BotSettings _settings;
+        private readonly Settings _settings;
+        private readonly ActorSystem _system;
         private readonly ILogger<TelegramActor> _logger;
         private readonly TelegramBotClient _botClient;
         private User _user;
@@ -23,19 +24,28 @@ namespace ahydrax_servitor
             UpdateType.ChannelPost
         };
 
-        public TelegramActor(BotSettings settings, ILogger<TelegramActor> logger)
+        public TelegramActor(Settings settings, ActorSystem system, ILogger<TelegramActor> logger)
         {
             _settings = settings;
+            _system = system;
             _logger = logger;
             _botClient = new TelegramBotClient(settings.TelegramBotApiKey);
 
-            Receive<>(async r => await Start());
+            ReceiveAsync<NotifyChat>(NotifyChat);
         }
 
-        protected override void PreStart()
+        private async Task NotifyChat(NotifyChat arg)
         {
-            _botClient.OnMessage += BotClientOnMessage;
-            _user = _botClient.GetMeAsync().GetAwaiter().GetResult();
+            await _botClient.SendTextMessageAsync(new ChatId(arg.ChatId),
+            "`" + arg.Message + "`",
+            ParseMode.Markdown,
+            disableNotification: true);
+        }
+
+        protected override async void PreStart()
+        {
+            _botClient.OnMessage += OnMessage;
+            _user = await _botClient.GetMeAsync();
             _botClient.StartReceiving(AllowedUpdates);
         }
 
@@ -44,25 +54,19 @@ namespace ahydrax_servitor
             _botClient.StopReceiving();
         }
 
-
-        private async void BotClientOnMessage(object sender, MessageEventArgs e)
+        private async void OnMessage(object sender, MessageEventArgs e)
         {
-
-
             var message = e.Message;
             if (!AuthorizedUser(message)) return;
 
-            if (message.Text == null) return;
-
             _logger.LogInformation($"Received: {message.Text} from {message.From.Id}");
             var parameters = message.Text.Split(' ');
-            var command = parameters.First();
+            var command = parameters.First().Replace("@" + _user.Username, "");
 
             switch (command)
             {
-                case "/whots@ahydrax_servitor_bot":
                 case "/whots":
-                    await RespondWhoInTeamspeak(message.Chat.Id);
+                    RespondWhoInTeamspeak(message.Chat.Id);
                     break;
 
                 case "/извени":
@@ -113,11 +117,10 @@ namespace ahydrax_servitor
                    message.From.Username == "ahydrax";
         }
 
-        private async Task RespondWhoInTeamspeak(long chatId)
+        private void RespondWhoInTeamspeak(long chatId)
         {
-            var clients = await _communicator.AskTeamspeakWhoIsInChat();
-            var responseMessage = clients.Length == 0 ? "`В тс пусто.`" : "```\r\n" + string.Join("\r\n", clients) + "```";
-            await _botClient.SendTextMessageAsync(new ChatId(chatId), responseMessage, ParseMode.Markdown, disableNotification: true);
+            var teamspeakActor = _system.ActorSelection("user/" + nameof(TeamspeakActor));
+            teamspeakActor.Tell(new WhoIsInTeamspeak(chatId));
         }
 
         private async Task SaySorry(string s, long chatId)
@@ -152,18 +155,8 @@ namespace ahydrax_servitor
         private async Task ReplyRandomMessage(long chatId)
         {
             var randomIndex = Random.Next(0, Replies.Length);
-
             var reply = Replies[randomIndex];
-
             await _botClient.SendTextMessageAsync(new ChatId(chatId), reply);
-        }
-
-        public async Task SendMessageToCommonChannel(string message)
-        {
-            await _botClient.SendTextMessageAsync(new ChatId(_settings.AllowedChatId),
-                "`" + message + "`",
-                ParseMode.Markdown,
-                disableNotification: true);
         }
     }
 }

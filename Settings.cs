@@ -1,6 +1,6 @@
 ﻿namespace ahydrax_servitor
 {
-    public class BotSettings
+    public class Settings
     {
         public long AllowedChatId { get; set; }
         public long LarisId { get; set; }
