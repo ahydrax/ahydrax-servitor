@@ -4,33 +4,27 @@ namespace ahydrax_servitor
 {
     public class Communicator
     {
-        private TelegramBot _telegramBot;
+        private TelegramBot _telegramActor;
         private TeamspeakBot _teamspeakBot;
 
-        public void StartBotsAndCommunication(TelegramBot telegramBot, TeamspeakBot teamspeakBot)
+        public void StartBotsAndCommunication(TelegramBot telegramActor, TeamspeakBot teamspeakBot)
         {
-            _telegramBot = telegramBot;
+            _telegramActor = telegramActor;
             _teamspeakBot = teamspeakBot;
 
-            _telegramBot.Start();
             _teamspeakBot.Start().GetAwaiter().GetResult();
+            _telegramActor.Start();
         }
 
         public async Task<string[]> AskTeamspeakWhoIsInChat()
         {
             var clients = await _teamspeakBot.AskTeamspeakWhoIsInChat();
-
             return clients;
         }
 
-        public async Task NotifyTelegramChannelUserJoined(string nickName)
+        public async Task SendMessageToCommonChannel(string message)
         {
-            await _telegramBot.SendUserJoined(nickName);
-        }
-
-        public async Task NotifyTelegramChannelUserLeft(string nickName)
-        {
-            await _telegramBot.SendUserLeft(nickName);
+            await _telegramActor.SendMessageToCommonChannel(message);
         }
     }
 }
