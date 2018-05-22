@@ -70,6 +70,15 @@ namespace ahydrax_servitor
             _teamSpeakClient.Client.Dispose();
         }
 
+        protected override SupervisorStrategy SupervisorStrategy()
+        {
+            return new OneForOneStrategy(
+                maxNrOfRetries: 10,
+                withinTimeRange: TimeSpan.FromMinutes(2),
+                localOnlyDecider: ex => Directive.Restart
+                );
+        }
+
         private async Task RespondWhoIsInTeamspeak(WhoIsInTeamspeak arg)
         {
             await _semaphoreSlim.WaitAsync();
@@ -82,7 +91,15 @@ namespace ahydrax_servitor
                     .OrderBy(x => x)
                     .ToArray();
 
-                var message = "``\r\n" + string.Join("\r\n", clientNicknames) + "``";
+                string message;
+                if (clientNicknames.Length == 0)
+                {
+                    message = "в тс пусто.";
+                }
+                else
+                {
+                    message = "``\r\n" + string.Join("\r\n", clientNicknames) + "``";
+                }
 
                 GetTelegramActor().Tell(new NotifyChat(arg.ChatId, message));
             }

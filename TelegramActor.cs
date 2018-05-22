@@ -128,11 +128,6 @@ namespace ahydrax_servitor
             await _botClient.SendTextMessageAsync(new ChatId(chatId), $"{s}, за мат извени");
         }
 
-        public void Stop()
-        {
-            _botClient.StopReceiving();
-        }
-
         private static readonly Random Random = new Random();
         private static readonly string[] Replies = {
             "Ларис, я занят",
