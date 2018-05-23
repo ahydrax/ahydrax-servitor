@@ -42,10 +42,10 @@ namespace ahydrax_servitor
             disableNotification: true);
         }
 
-        protected override async void PreStart()
+        protected override void PreStart()
         {
             _botClient.OnMessage += OnMessage;
-            _user = await _botClient.GetMeAsync();
+            _user = _botClient.GetMeAsync().GetAwaiter().GetResult();
             _botClient.StartReceiving(AllowedUpdates);
         }
 

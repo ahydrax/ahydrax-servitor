@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using Akka.Actor;
+using Akka.Configuration;
+using Akka.Event;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -16,13 +18,10 @@ namespace ahydrax_servitor
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
 
             var loggerFactory = new LoggerFactory()
-                .AddConsole()
-#if DEBUG
-                .AddDebug()
-#endif
-                ;
+                .AddConsole();
 
             _logger = loggerFactory.CreateLogger(nameof(Program));
+            LoggingActor.DefaultLoggerFactory = loggerFactory;
 
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsecrets.json")
@@ -40,7 +39,7 @@ namespace ahydrax_servitor
             };
             _logger.LogInformation("Settings initialized");
 
-            using (var system = ActorSystem.Create("ahydrax-servitor"))
+            using (var system = ActorSystem.Create("ahydrax-servitor", AkkaConfig))
             {
                 system.ActorOf(
                     Props.Create(() => new TelegramActor(settings, system, loggerFactory.CreateLogger<TelegramActor>())),
@@ -59,5 +58,21 @@ namespace ahydrax_servitor
             ProgramExitEvent.Set();
             e.Cancel = true;
         }
+
+        private const string AkkaConfig = @"
+akka {
+    loggers = [""ahydrax_servitor.LoggingActor, ahydrax-servitor""]
+    loglevel = DEBUG
+    log-config-on-start = on        
+    actor {                
+        debug {  
+              receive = on 
+              autoreceive = on
+              lifecycle = on
+              event-stream = on
+              unhandled = on
+        }
+}
+";
     }
 }

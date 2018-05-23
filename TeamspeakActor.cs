@@ -34,7 +34,9 @@ namespace ahydrax_servitor
             ReceiveAsync<WhoIsInTeamspeak>(RespondWhoIsInTeamspeak);
         }
 
-        protected override async void PreStart()
+        protected override void PreStart() => InternalStart().GetAwaiter().GetResult();
+
+        private async Task InternalStart()
         {
             _logger.LogInformation("Starting teamspeak client...");
             await _teamSpeakClient.Connect();
@@ -61,11 +63,12 @@ namespace ahydrax_servitor
 
             _connected = true;
 
-            _timer = new Timer(KeepAlive, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            _timer = new Timer(KeepAlive, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         }
 
         protected override void PostStop()
         {
+            _connected = false;
             _timer?.Dispose();
             _teamSpeakClient.Client.Dispose();
         }
@@ -73,8 +76,8 @@ namespace ahydrax_servitor
         protected override SupervisorStrategy SupervisorStrategy()
         {
             return new OneForOneStrategy(
-                maxNrOfRetries: 10,
-                withinTimeRange: TimeSpan.FromMinutes(2),
+                maxNrOfRetries: 25,
+                withinTimeRange: TimeSpan.FromSeconds(30),
                 localOnlyDecider: ex => Directive.Restart
                 );
         }
@@ -102,6 +105,10 @@ namespace ahydrax_servitor
                 }
 
                 GetTelegramActor().Tell(new NotifyChat(arg.ChatId, message));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occured during querying teamspeak server");
             }
             finally
             {
