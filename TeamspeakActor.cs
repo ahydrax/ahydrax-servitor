@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
-using Microsoft.Extensions.Logging;
+using Akka.Event;
 using TeamSpeak3QueryApi.Net.Specialized;
 using TeamSpeak3QueryApi.Net.Specialized.Notifications;
 
@@ -17,20 +17,21 @@ namespace ahydrax_servitor
         private readonly ConcurrentDictionary<int, string> _nicknames;
         private readonly Settings _settings;
         private readonly ActorSystem _system;
-        private readonly ILogger<TeamspeakActor> _logger;
+        private readonly ILoggingAdapter _logger;
         private readonly TeamSpeakClient _teamSpeakClient;
         private Timer _timer;
         private bool _connected;
 
-        public TeamspeakActor(Settings settings, ActorSystem system, ILogger<TeamspeakActor> logger)
+        public TeamspeakActor(Settings settings)
         {
             _nicknames = new ConcurrentDictionary<int, string>();
             _settings = settings;
-            _system = system;
-            _logger = logger;
+            _system = Context.System;
+            _logger = Context.GetLogger();
 
             _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, _settings.TeamspeakPort);
 
+            _system = Context.System;
             ReceiveAsync<WhoIsInTeamspeak>(RespondWhoIsInTeamspeak);
         }
 
@@ -38,16 +39,16 @@ namespace ahydrax_servitor
 
         private async Task InternalStart()
         {
-            _logger.LogInformation("Starting teamspeak client...");
+            _logger.Info("Starting teamspeak client...");
             await _teamSpeakClient.Connect();
             await _teamSpeakClient.Login(_settings.TeamspeakUsername, _settings.TeamspeakPassword);
-            _logger.LogInformation("Teamspeak bot connected");
+            _logger.Info("Teamspeak bot connected");
 
             await _teamSpeakClient.UseServer(1);
-            _logger.LogInformation("Server changed");
+            _logger.Info("Server changed");
 
             var me = await _teamSpeakClient.WhoAmI();
-            _logger.LogInformation($"Connected using username {me.NickName}");
+            _logger.Info($"Connected using username {me.NickName}");
 
             var clients = await _teamSpeakClient.GetClients();
             foreach (var client in clients)
@@ -70,7 +71,6 @@ namespace ahydrax_servitor
         {
             _connected = false;
             _timer?.Dispose();
-            _teamSpeakClient.Client.Dispose();
         }
 
         protected override SupervisorStrategy SupervisorStrategy()
@@ -94,21 +94,13 @@ namespace ahydrax_servitor
                     .OrderBy(x => x)
                     .ToArray();
 
-                string message;
-                if (clientNicknames.Length == 0)
-                {
-                    message = "в тс пусто.";
-                }
-                else
-                {
-                    message = "``\r\n" + string.Join("\r\n", clientNicknames) + "``";
-                }
+                var message = clientNicknames.Length == 0 ? "в тс пусто." : string.Join("\r\n", clientNicknames);
 
-                GetTelegramActor().Tell(new NotifyChat(arg.ChatId, message));
+                GetTelegramActor().Tell(new TelegramMessage<string>(arg.ChatId, message));
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error occured during querying teamspeak server");
+                _logger.Error(e, "Error occured during querying teamspeak server");
             }
             finally
             {
@@ -124,7 +116,7 @@ namespace ahydrax_servitor
             try
             {
                 var me = await _teamSpeakClient.WhoAmI();
-                _logger.LogInformation($"ping {me.VirtualServerStatus}");
+                _logger.Info($"ping {me.VirtualServerStatus}");
             }
             finally
             {
@@ -134,26 +126,26 @@ namespace ahydrax_servitor
 
         private void UserLeft(IReadOnlyCollection<ClientLeftView> views)
         {
-            _logger.LogInformation("user left");
+            _logger.Info("user left");
             foreach (var clientLeftView in views)
             {
                 var nickname = _nicknames?[clientLeftView.Id] ?? "хз кто";
-                GetTelegramActor().Tell(new NotifyChat(_settings.AllowedChatId, $"{nickname} свалил из тс."));
+                GetTelegramActor().Tell(new TelegramMessage<string>(_settings.AllowedChatId, $"{nickname} свалил из тс."));
             }
         }
 
         private void UserEntered(IReadOnlyCollection<ClientEnterView> collection)
         {
-            _logger.LogInformation("user entered");
+            _logger.Info("user entered");
             foreach (var clientEnterView in collection)
             {
                 var nickname = clientEnterView.NickName;
-                GetTelegramActor().Tell(new NotifyChat(_settings.AllowedChatId, FindAppropriateGreeting(nickname)));
+                GetTelegramActor().Tell(new TelegramMessage<string>(_settings.AllowedChatId, FindAppropriateGreeting(nickname)));
                 _nicknames.AddOrUpdate(clientEnterView.Id, nickname, (i, s) => clientEnterView.NickName);
             }
         }
 
-        private ActorSelection GetTelegramActor() => _system.ActorSelection("user/" + nameof(TelegramActor));
+        private ActorSelection GetTelegramActor() => _system.ActorSelection("user/" + nameof(TelegramMessageChannel));
 
         private static readonly Random Random = new Random();
         private static readonly string[] ToxicGreetings = {

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Akka.Actor;
-using Akka.Configuration;
-using Akka.Event;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -42,11 +40,19 @@ namespace ahydrax_servitor
             using (var system = ActorSystem.Create("ahydrax-servitor", AkkaConfig))
             {
                 system.ActorOf(
-                    Props.Create(() => new TelegramActor(settings, system, loggerFactory.CreateLogger<TelegramActor>())),
-                    nameof(TelegramActor));
+                    Props.Create(() => new TelegramMessageChannel(settings)),
+                    nameof(TelegramMessageChannel));
 
                 system.ActorOf(
-                    Props.Create(() => new TeamspeakActor(settings, system, loggerFactory.CreateLogger<TeamspeakActor>())),
+                    Props.Create(() => new TelegramMessageRouter(settings)),
+                    nameof(TelegramMessageRouter));
+
+                system.ActorOf(
+                    Props.Create(() => new CatStatusResponder()),
+                    nameof(CatStatusResponder));
+
+                system.ActorOf(
+                    Props.Create(() => new TeamspeakActor(settings)),
                     nameof(TeamspeakActor));
 
                 ProgramExitEvent.WaitOne();
