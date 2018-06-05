@@ -30,11 +30,11 @@ namespace ahydrax_servitor
             switch (command)
             {
                 case "/whots":
-                    Context.System.ActorSelection("user/" + nameof(TeamspeakActor)).Tell(new WhoIsInTeamspeak(arg.Chat.Id));
+                    Context.System.SelectActor<TeamspeakActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
                     
                 case "/chokot":
-                    Context.System.ActorSelection("user/" + nameof(CatStatusResponder)).Tell(new TelegramMessage<string>(message.Chat.Id, ""));
+                    Context.System.SelectActor<CatStatusResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 default:

@@ -29,17 +29,7 @@ namespace ahydrax_servitor
             _telegramClient = new TelegramBotClient(settings.TelegramBotApiKey);
             _telegramClient.OnMessage += OnMessage;
 
-            ReceiveAsync<TelegramMessage<string>>(SendMessageInChat);
-        }
-
-        private Task SendMessageInChat(TelegramMessage<string> arg)
-        {
-            var monospaceSymbol = arg.Content.Contains("\r\n") ? "```\r\n" : "`";
-
-            return _telegramClient.SendTextMessageAsync(new ChatId(arg.ChatId),
-                monospaceSymbol + arg.Content + monospaceSymbol,
-                ParseMode.Markdown,
-                disableNotification: true);
+            ReceiveAsync<MessageArgs<string>>(SendMessageInChat);
         }
 
         protected override void PreStart() => _telegramClient.StartReceiving(AllowedUpdates);
@@ -48,8 +38,18 @@ namespace ahydrax_servitor
 
         private void OnMessage(object sender, MessageEventArgs e)
         {
+            _logger.Info("Message arrived '{0}' from {1}", e.Message.Text, e.Message.From.Id);
             _system.ActorSelection("user/" + nameof(TelegramMessageRouter)).Tell(e.Message);
-            _logger.Info("Message arrived: {0}", e);
+        }
+
+        private Task SendMessageInChat(MessageArgs<string> arg)
+        {
+            var monospaceSymbol = arg.Content.Contains("\r\n") ? "```\r\n" : "`";
+
+            return _telegramClient.SendTextMessageAsync(new ChatId(arg.ChatId),
+                monospaceSymbol + arg.Content + monospaceSymbol,
+                ParseMode.Markdown,
+                disableNotification: true);
         }
     }
 }

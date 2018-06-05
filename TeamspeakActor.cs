@@ -32,7 +32,7 @@ namespace ahydrax_servitor
             _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, _settings.TeamspeakPort);
 
             _system = Context.System;
-            ReceiveAsync<WhoIsInTeamspeak>(RespondWhoIsInTeamspeak);
+            ReceiveAsync<MessageArgs>(RespondWhoIsInTeamspeak);
         }
 
         protected override void PreStart() => InternalStart().GetAwaiter().GetResult();
@@ -59,11 +59,9 @@ namespace ahydrax_servitor
             await _teamSpeakClient.RegisterServerNotification();
 
             _teamSpeakClient.Subscribe<ClientEnterView>(UserEntered);
-
             _teamSpeakClient.Subscribe<ClientLeftView>(UserLeft);
 
             _connected = true;
-
             _timer = new Timer(KeepAlive, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         }
 
@@ -82,7 +80,7 @@ namespace ahydrax_servitor
                 );
         }
 
-        private async Task RespondWhoIsInTeamspeak(WhoIsInTeamspeak arg)
+        private async Task RespondWhoIsInTeamspeak(MessageArgs arg)
         {
             await _semaphoreSlim.WaitAsync();
             try
@@ -96,7 +94,7 @@ namespace ahydrax_servitor
 
                 var message = clientNicknames.Length == 0 ? "в тс пусто." : string.Join("\r\n", clientNicknames);
 
-                GetTelegramActor().Tell(new TelegramMessage<string>(arg.ChatId, message));
+                GetTelegramActor().Tell(new MessageArgs<string>(arg.ChatId, message));
             }
             catch (Exception e)
             {
@@ -130,7 +128,7 @@ namespace ahydrax_servitor
             foreach (var clientLeftView in views)
             {
                 var nickname = _nicknames?[clientLeftView.Id] ?? "хз кто";
-                GetTelegramActor().Tell(new TelegramMessage<string>(_settings.AllowedChatId, $"{nickname} свалил из тс."));
+                GetTelegramActor().Tell(new MessageArgs<string>(_settings.AllowedChatId, $"{nickname} свалил из тс."));
             }
         }
 
@@ -140,7 +138,7 @@ namespace ahydrax_servitor
             foreach (var clientEnterView in collection)
             {
                 var nickname = clientEnterView.NickName;
-                GetTelegramActor().Tell(new TelegramMessage<string>(_settings.AllowedChatId, FindAppropriateGreeting(nickname)));
+                GetTelegramActor().Tell(new MessageArgs<string>(_settings.AllowedChatId, FindAppropriateGreeting(nickname)));
                 _nicknames.AddOrUpdate(clientEnterView.Id, nickname, (i, s) => clientEnterView.NickName);
             }
         }

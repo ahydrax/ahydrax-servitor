@@ -26,14 +26,14 @@ namespace ahydrax_servitor
 
         public CatStatusResponder()
         {
-            Receive<TelegramMessage<string>>(Respond);
+            Receive<MessageArgs>(Respond);
         }
 
-        private bool Respond(TelegramMessage<string> obj)
+        private bool Respond(MessageArgs obj)
         {
             var randomIndex = Random.Next(0, Replies.Length);
             var reply = Replies[randomIndex];
-            Context.System.ActorSelection("user/" + nameof(TelegramMessageChannel)).Tell(new TelegramMessage<string>(obj.ChatId, reply));
+            Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(obj.ChatId, reply));
             return true;
         }
     }
