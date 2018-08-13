@@ -1,7 +1,7 @@
 ﻿using System;
 using Akka.Actor;
 
-namespace ahydrax_servitor
+namespace ahydrax.Servitor
 {
     public class CatStatusResponder : ReceiveActor
     {

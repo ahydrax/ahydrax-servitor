@@ -1,4 +1,6 @@
-﻿namespace ahydrax_servitor
+﻿using System;
+
+namespace ahydrax.Servitor
 {
     public class NotifyChat
     {
@@ -20,6 +22,18 @@
         public WhoIsInTeamspeak(long chatId)
         {
             ChatId = chatId;
+        }
+    }
+
+    public class ActorFailed
+    {
+        public string Reason { get; }
+        public Exception Exception { get; }
+
+        public ActorFailed(string reason, Exception exception = null)
+        {
+            Reason = reason;
+            Exception = exception;
         }
     }
 }

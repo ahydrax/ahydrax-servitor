@@ -2,7 +2,7 @@
 using Akka.Event;
 using Microsoft.Extensions.Logging;
 
-namespace ahydrax_servitor
+namespace ahydrax.Servitor
 {
     public sealed class LoggingActor : ReceiveActor
     {

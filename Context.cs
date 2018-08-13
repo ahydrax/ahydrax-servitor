@@ -1,6 +1,6 @@
 ﻿using Telegram.Bot.Types;
 
-namespace ahydrax_servitor
+namespace ahydrax.Servitor
 {
     public class Context
     {

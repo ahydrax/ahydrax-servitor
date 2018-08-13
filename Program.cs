@@ -4,7 +4,7 @@ using Akka.Actor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace ahydrax_servitor
+namespace ahydrax.Servitor
 {
     public static class Program
     {

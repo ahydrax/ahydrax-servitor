@@ -1,4 +1,4 @@
-﻿namespace ahydrax_servitor
+﻿namespace ahydrax.Servitor
 {
     public class MessageArgs
     {

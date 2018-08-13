@@ -3,7 +3,7 @@ using Akka.Actor;
 using Akka.Event;
 using Telegram.Bot.Types;
 
-namespace ahydrax_servitor
+namespace ahydrax.Servitor
 {
     public class TelegramMessageRouter : ReceiveActor
     {
