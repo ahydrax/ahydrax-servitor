@@ -9,7 +9,7 @@ using Akka.Event;
 using TeamSpeak3QueryApi.Net.Specialized;
 using TeamSpeak3QueryApi.Net.Specialized.Notifications;
 
-namespace ahydrax_servitor
+namespace ahydrax.Servitor
 {
     public class TeamspeakActor : ReceiveActor
     {
@@ -18,7 +18,7 @@ namespace ahydrax_servitor
         private readonly Settings _settings;
         private readonly ActorSystem _system;
         private readonly ILoggingAdapter _logger;
-        private readonly TeamSpeakClient _teamSpeakClient;
+        private TeamSpeakClient _teamSpeakClient;
         private Timer _timer;
         private bool _connected;
 
@@ -28,17 +28,23 @@ namespace ahydrax_servitor
             _settings = settings;
             _system = Context.System;
             _logger = Context.GetLogger();
-
-            _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, _settings.TeamspeakPort);
-
             _system = Context.System;
+
             ReceiveAsync<MessageArgs>(RespondWhoIsInTeamspeak);
+            ReceiveAsync<ActorFailed>(ActorFailed);
+        }
+
+        private async Task ActorFailed(ActorFailed arg)
+        {
+            DisposeClient();
+            await InternalStart();
         }
 
         protected override void PreStart() => InternalStart().GetAwaiter().GetResult();
 
         private async Task InternalStart()
         {
+            _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, _settings.TeamspeakPort);
             _logger.Info("Starting teamspeak client...");
             await _teamSpeakClient.Connect();
             await _teamSpeakClient.Login(_settings.TeamspeakUsername, _settings.TeamspeakPassword);
@@ -50,6 +56,7 @@ namespace ahydrax_servitor
             var me = await _teamSpeakClient.WhoAmI();
             _logger.Info($"Connected using username {me.NickName}");
 
+            _nicknames.Clear();
             var clients = await _teamSpeakClient.GetClients();
             foreach (var client in clients)
             {
@@ -62,22 +69,19 @@ namespace ahydrax_servitor
             _teamSpeakClient.Subscribe<ClientLeftView>(UserLeft);
 
             _connected = true;
-            _timer = new Timer(KeepAlive, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+            _timer = new Timer(Pulse, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         }
 
-        protected override void PostStop()
+        private void DisposeClient()
         {
-            _connected = false;
+            _logger.Info("Client disposal initiated");
             _timer?.Dispose();
-        }
-
-        protected override SupervisorStrategy SupervisorStrategy()
-        {
-            return new OneForOneStrategy(
-                maxNrOfRetries: 25,
-                withinTimeRange: TimeSpan.FromSeconds(30),
-                localOnlyDecider: ex => Directive.Restart
-                );
+            _connected = false;
+            _teamSpeakClient.Unsubscribe<ClientEnterView>();
+            _teamSpeakClient.Unsubscribe<ClientLeftView>();
+            _teamSpeakClient.Client?.Dispose();
+            _teamSpeakClient = null;
+            _logger.Info("Client unsubscribed");
         }
 
         private async Task RespondWhoIsInTeamspeak(MessageArgs arg)
@@ -106,15 +110,24 @@ namespace ahydrax_servitor
             }
         }
 
-        private async void KeepAlive(object state)
+        private async void Pulse(object state)
         {
-            if (!_connected) return;
+            if (!_connected)
+            {
+                Self.Tell(new ActorFailed("Connection is broken"));
+                return;
+            }
 
             await _semaphoreSlim.WaitAsync();
             try
             {
                 var me = await _teamSpeakClient.WhoAmI();
-                _logger.Info($"ping {me.VirtualServerStatus}");
+                _logger.Info($"Ping {me.VirtualServerStatus}");
+            }
+            catch
+            {
+                _connected = false;
+                _logger.Error("Teamspeak actor failed");
             }
             finally
             {
