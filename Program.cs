@@ -67,7 +67,7 @@ namespace ahydrax.Servitor
 
         private const string AkkaConfig = @"
 akka {
-    loggers = [""ahydrax_servitor.LoggingActor, ahydrax-servitor""]
+    loggers = [""ahydrax.Servitor.LoggingActor, ahydrax-servitor""]
     loglevel = DEBUG
     log-config-on-start = on        
     actor {                
