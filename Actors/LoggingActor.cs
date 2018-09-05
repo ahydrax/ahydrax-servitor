@@ -2,16 +2,13 @@
 using Akka.Event;
 using Microsoft.Extensions.Logging;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public sealed class LoggingActor : ReceiveActor
     {
-        public static ILoggerFactory DefaultLoggerFactory { get; set; }
 
-        public LoggingActor()
+        public LoggingActor(ILogger logger)
         {
-            var logger = DefaultLoggerFactory.CreateLogger("akka");
-
             Receive<Debug>(x => logger.LogDebug(x.ToString()));
             Receive<Error>(x => logger.LogError(x.ToString()));
             Receive<Info>(x => logger.LogInformation(x.ToString()));

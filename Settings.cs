@@ -2,9 +2,10 @@
 {
     public class Settings
     {
-        public long AllowedChatId { get; set; }
-        public long LarisId { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
         public string TelegramBotApiKey { get; set; }
+        public long TelegramHostGroupId { get; set; }
         public string TeamspeakHost { get; set; }
         public int TeamspeakPort { get; set; }
         public string TeamspeakUsername { get; set; }

@@ -1,6 +1,6 @@
 ﻿using Akka.Actor;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public class TelegramContextStorageActor : ReceiveActor
     {

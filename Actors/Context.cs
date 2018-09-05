@@ -1,6 +1,6 @@
 ﻿using Telegram.Bot.Types;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public class Context
     {
@@ -11,7 +11,6 @@ namespace ahydrax.Servitor
         }
 
         public User Me { get; }
-
         public Message Message { get; }
     }
 }

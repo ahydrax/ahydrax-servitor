@@ -9,7 +9,7 @@ using Akka.Event;
 using TeamSpeak3QueryApi.Net.Specialized;
 using TeamSpeak3QueryApi.Net.Specialized.Notifications;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public class TeamspeakActor : ReceiveActor
     {
@@ -141,7 +141,7 @@ namespace ahydrax.Servitor
             foreach (var clientLeftView in views)
             {
                 var nickname = _nicknames?[clientLeftView.Id] ?? "хз кто";
-                GetTelegramActor().Tell(new MessageArgs<string>(_settings.AllowedChatId, $"{nickname} свалил из тс."));
+                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, $"{nickname} свалил из тс."));
             }
         }
 
@@ -151,7 +151,7 @@ namespace ahydrax.Servitor
             foreach (var clientEnterView in collection)
             {
                 var nickname = clientEnterView.NickName;
-                GetTelegramActor().Tell(new MessageArgs<string>(_settings.AllowedChatId, FindAppropriateGreeting(nickname)));
+                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, FindAppropriateGreeting(nickname)));
                 _nicknames.AddOrUpdate(clientEnterView.Id, nickname, (i, s) => clientEnterView.NickName);
             }
         }

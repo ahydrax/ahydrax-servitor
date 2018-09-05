@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public class NotifyChat
     {

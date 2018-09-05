@@ -1,19 +1,23 @@
 ﻿using System.Linq;
+using ahydrax.Servitor.Models;
 using Akka.Actor;
 using Akka.Event;
+using LiteDB;
 using Telegram.Bot.Types;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public class TelegramMessageRouter : ReceiveActor
     {
         private readonly Settings _settings;
         private readonly ILoggingAdapter _logger;
+        private readonly LiteCollection<AuthorizedUser> _authorizedUsersCollection;
 
-        public TelegramMessageRouter(Settings settings)
+        public TelegramMessageRouter(Settings settings, LiteDatabase db)
         {
             _settings = settings;
             _logger = Context.GetLogger();
+            _authorizedUsersCollection = db.GetCollection<AuthorizedUser>();
 
             Receive<Message>(RouteMessage);
         }
@@ -32,7 +36,7 @@ namespace ahydrax.Servitor
                 case "/whots":
                     Context.System.SelectActor<TeamspeakActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
-                    
+
                 case "/chokot":
                     Context.System.SelectActor<CatStatusResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
@@ -43,8 +47,10 @@ namespace ahydrax.Servitor
         }
 
         private bool AuthorizedUser(Message message)
-            => message.Chat.Id == _settings.AllowedChatId ||
-               message.Chat.Id == _settings.LarisId ||
-               message.From.Username == "ahydrax";
+        {
+            if (message.Chat.Id == _settings.TelegramHostGroupId) return true;
+
+            return _authorizedUsersCollection.Exists(x => x.Id == message.Chat.Id);
+        }
     }
 }

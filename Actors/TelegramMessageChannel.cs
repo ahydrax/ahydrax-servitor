@@ -6,7 +6,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace ahydrax.Servitor
+namespace ahydrax.Servitor.Actors
 {
     public class TelegramMessageChannel : ReceiveActor
     {
