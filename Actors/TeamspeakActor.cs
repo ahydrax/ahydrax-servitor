@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using LiteDB;
 using TeamSpeak3QueryApi.Net.Specialized;
 using TeamSpeak3QueryApi.Net.Specialized.Notifications;
 
@@ -18,17 +19,24 @@ namespace ahydrax.Servitor.Actors
         private readonly Settings _settings;
         private readonly ActorSystem _system;
         private readonly ILoggingAdapter _logger;
+        private readonly LiteCollection<Greeting> _greetingsCollection;
+        private readonly LiteCollection<LeaveMessage> _leaveMessagesCollection;
         private TeamSpeakClient _teamSpeakClient;
         private Timer _timer;
         private bool _connected;
 
-        public TeamspeakActor(Settings settings)
+        public TeamspeakActor(Settings settings, LiteDatabase db)
         {
             _nicknames = new ConcurrentDictionary<int, string>();
             _settings = settings;
             _system = Context.System;
             _logger = Context.GetLogger();
             _system = Context.System;
+            _greetingsCollection = db.GetCollection<Greeting>();
+            _greetingsCollection.EnsureIndex(x => x.Nickname);
+
+            _leaveMessagesCollection = db.GetCollection<LeaveMessage>();
+            _leaveMessagesCollection.EnsureIndex(x => x.Nickname);
 
             ReceiveAsync<MessageArgs>(RespondWhoIsInTeamspeak);
             ReceiveAsync<ActorFailed>(ActorFailed);
@@ -140,8 +148,9 @@ namespace ahydrax.Servitor.Actors
             _logger.Info("user left");
             foreach (var clientLeftView in views)
             {
-                var nickname = _nicknames?[clientLeftView.Id] ?? "хз кто";
-                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, $"{nickname} свалил из тс."));
+                var nickname = _nicknames?[clientLeftView.Id] ?? "???";
+                var leaveMessage = FindAppropriateLeaveMessage(nickname);
+                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(leaveMessage, nickname)));
             }
         }
 
@@ -151,7 +160,8 @@ namespace ahydrax.Servitor.Actors
             foreach (var clientEnterView in collection)
             {
                 var nickname = clientEnterView.NickName;
-                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, FindAppropriateGreeting(nickname)));
+                var template = FindAppropriateGreeting(nickname);
+                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(template, nickname)));
                 _nicknames.AddOrUpdate(clientEnterView.Id, nickname, (i, s) => clientEnterView.NickName);
             }
         }
@@ -159,30 +169,41 @@ namespace ahydrax.Servitor.Actors
         private ActorSelection GetTelegramActor() => _system.ActorSelection("user/" + nameof(TelegramMessageChannel));
 
         private static readonly Random Random = new Random();
-        private static readonly string[] ToxicGreetings = {
-            "ой бля, ёбаный руинер {0} зашел",
-            "какая же вам пизда, {0} зашел",
-            "это мой друг {0} (не точно) в тс "
-        };
 
-        private static readonly string[] Greetings =
+        private string FindAppropriateGreeting(string nickname)
         {
-            "{0} зашел в тс",
-            "это мой друг {0} в тс"
-        };
+            var greetings = _greetingsCollection.Find(x => x.Nickname == nickname).ToList();
+            if (greetings.Count == 0)
+            {
+                greetings = _greetingsCollection.Find(x => x.Nickname == "all").ToList();
+            }
 
-        private static string FindAppropriateGreeting(string nickname)
+            if (greetings.Count == 0)
+            {
+                return "{0} entered teamspeak.";
+            }
+
+            var greeting = greetings[Random.Next(greetings.Count)];
+
+            return greeting.Template;
+        }
+
+        private string FindAppropriateLeaveMessage(string nickname)
         {
-            if (nickname == "hwoh" || nickname == "h0l3m4k3r")
+            var leaveMessages = _leaveMessagesCollection.Find(x => x.Nickname == nickname).ToList();
+            if (leaveMessages.Count == 0)
             {
-                var randomIndex = Random.Next(0, ToxicGreetings.Length);
-                return string.Format(ToxicGreetings[randomIndex], nickname);
+                leaveMessages = _leaveMessagesCollection.Find(x => x.Nickname == "all").ToList();
             }
-            else
+
+            if (leaveMessages.Count == 0)
             {
-                var randomIndex = Random.Next(0, Greetings.Length);
-                return string.Format(Greetings[randomIndex], nickname);
+                return "{0} left teamspeak";
             }
+
+            var leaveMessage = leaveMessages[Random.Next(leaveMessages.Count)];
+
+            return leaveMessage.Template;
         }
     }
 }

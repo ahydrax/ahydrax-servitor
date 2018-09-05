@@ -1,0 +1,52 @@
+﻿<h2>TeamspeakPage</h2>
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col-8">
+        <div class="card border border-dark bg-dark">
+            <div class="card-header">
+                <p class="text-light">Greeting</p>
+            </div>
+            <div class="card-body bg-white">
+                <form asp-action="AddGreeting" method="post">
+                    <div class="input-group mb-3">
+                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required>
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" name="Template" class="form-control" placeholder="Template" value="" required>
+                    </div>
+
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col"></div>
+</div>
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col-8">
+        <div class="card border border-dark bg-dark">
+            <div class="card-header">
+                <p class="text-light">Leaving</p>
+            </div>
+            <div class="card-body bg-white">
+                <form asp-action="AddLeaveMessage" method="post">
+                    <div class="input-group mb-3">
+                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required>
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" name="Template" class="form-control" placeholder="Template" value="" required>
+                    </div>
+
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Add</button>
+                </form>
+            </div>
+            <div class="card-footer bg-light text-muted">
+                © @DateTime.Now.Year ahydrax
+            </div>
+        </div>
+    </div>
+    <div class="col"></div>
+</div>

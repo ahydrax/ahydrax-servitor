@@ -50,7 +50,7 @@ namespace ahydrax.Servitor
                 nameof(CatStatusResponder));
 
             actorSystem.ActorOf(
-                Props.Create(() => new TeamspeakActor(settings)),
+                Props.Create(() => new TeamspeakActor(settings, db)),
                 nameof(TeamspeakActor));
 
             services.AddSingleton(actorSystem);
