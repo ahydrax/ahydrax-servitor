@@ -40,7 +40,6 @@ namespace ahydrax.Servitor
                 Props.Create(() => new TelegramMessageChannel(settings)),
                 nameof(TelegramMessageChannel));
 
-
             actorSystem.ActorOf(
                 Props.Create(() => new TelegramMessageRouter(settings, db)),
                 nameof(TelegramMessageRouter));
@@ -52,6 +51,10 @@ namespace ahydrax.Servitor
             actorSystem.ActorOf(
                 Props.Create(() => new TeamspeakActor(settings, db)),
                 nameof(TeamspeakActor));
+
+            actorSystem.ActorOf(
+                Props.Create(() => new TelegramMyIdResponder()),
+                nameof(TelegramMyIdResponder));
 
             services.AddSingleton(actorSystem);
             services.AddSingleton(db);
@@ -71,9 +74,8 @@ namespace ahydrax.Servitor
             }
             else
             {
-                app.UseHttpsRedirection();
+                app.UseForwardedHeaders();
                 app.UseExceptionHandler("/error/500");
-                app.UseHsts();
             }
 
             app.UseAuthentication();

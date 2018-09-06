@@ -25,7 +25,6 @@ namespace ahydrax.Servitor.Actors
         private bool RouteMessage(Message arg)
         {
             var message = arg;
-            if (!AuthorizedUser(message)) return true;
 
             _logger.Info($"Received: {message.Text} from {message.From.Id}");
             var parameters = message.Text.Split(' ');
@@ -34,11 +33,17 @@ namespace ahydrax.Servitor.Actors
             switch (command)
             {
                 case "/whots":
+                    if (!AuthorizedUser(message)) return true;
                     Context.System.SelectActor<TeamspeakActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/chokot":
+                    if (!AuthorizedUser(message)) return true;
                     Context.System.SelectActor<CatStatusResponder>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;
+
+                case "/chatid":
+                    Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 default:
@@ -49,7 +54,6 @@ namespace ahydrax.Servitor.Actors
         private bool AuthorizedUser(Message message)
         {
             if (message.Chat.Id == _settings.TelegramHostGroupId) return true;
-
             return _authorizedUsersCollection.Exists(x => x.Id == message.Chat.Id);
         }
     }

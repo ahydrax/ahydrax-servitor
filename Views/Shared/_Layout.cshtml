@@ -1,8 +1,8 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>ahydrax-servitor</title>
 
     <link rel="stylesheet" href="/css/site.css">
@@ -24,8 +24,37 @@
             crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="container">
+
+    <header>
+        <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-dark border-bottom shadow-sm">
+            <h5 class="my-0 mr-md-auto font-weight-normal text-white"><a class="navbar-brand" href="/">ahydrax-servitor</a></h5>
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <a class="p-2 text-white" href="/messages">Messages</a>
+                <a class="p-2 text-white" href="/users">Users</a>
+                <a class="p-2 text-white" href="/ts">Teamspeak</a>
+            }
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <a class="btn btn-outline-primary" href="/logout">Log out</a>
+            }
+            else
+            {
+                <a class="btn btn-outline-primary" href="/login">Log in</a>
+            }
+        </div>
+    </header>
+
+    <main role="main" class="container">
         @RenderBody()
-    </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <span class="text-muted">&copy; ahydrax @DateTime.Now.Year</span>
+        </div>
+    </footer>
 </body>
 </html>

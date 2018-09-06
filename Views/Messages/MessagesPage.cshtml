@@ -1,25 +1,15 @@
 ﻿@model ahydrax.Servitor.Models.TextMessage
 
+<h2>Send message to group</h2>
 <div class="row">
-    <div class="col"></div>
-    <div class="col-8">
-        <div class="card border border-dark bg-dark">
-            <div class="card-header">
-                <p class="text-light">Send message</p>
+    <div class="col-sm-12">
+        <form asp-action="PostMessage" method="post">
+            <div class="input-group">
+                <input type="text" name="Text" class="form-control" placeholder="Text" value="" required autofocus>
+                <div class="input-group-append">
+                    <button class="btn btn-primary btn-block" type="submit">Send</button>
+                </div>
             </div>
-            <div class="card-body bg-white">
-                <form asp-action="PostMessage" method="post">
-                    <div class="input-group mb-3">
-                        <input type="text" id="Text" asp-for="Text" class="form-control" placeholder="Message" value="" required>
-                    </div>
-
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">Send</button>
-                </form>
-            </div>
-            <div class="card-footer bg-light text-muted">
-                © @DateTime.Now.Year ahydrax
-            </div>
-        </div>
+        </form>
     </div>
-    <div class="col"></div>
 </div>

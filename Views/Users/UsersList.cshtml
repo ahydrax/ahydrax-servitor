@@ -1,0 +1,41 @@
+﻿@model List<ahydrax.Servitor.Models.AuthorizedUser>
+
+<div class="row">
+    <div class="col-sm-12">
+        <form asp-action="UsersAdd" method="post">
+            <div class="input-group mb-3">
+                <input type="number" name="Id" class="form-control" placeholder="Id" value="" required autofocus>
+                <input type="text" name="Name" class="form-control" placeholder="Name" value="" required>
+                <div class="input-group-append">
+                    <button class="btn btn-primary btn-block" type="submit">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Name</td>
+                    <td>
+                        <form action="/users/@user.Id/delete" method="post">
+                            <button class="btn btn-sm btn-outline-primary" type="submit">delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

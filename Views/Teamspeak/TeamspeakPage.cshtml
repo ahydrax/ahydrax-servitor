@@ -1,52 +1,91 @@
-﻿<h2>TeamspeakPage</h2>
+﻿@model Tuple<List<ahydrax.Servitor.Actors.Greeting>, List<ahydrax.Servitor.Actors.LeaveMessage>>
 
 <div class="row">
-    <div class="col"></div>
-    <div class="col-8">
-        <div class="card border border-dark bg-dark">
-            <div class="card-header">
-                <p class="text-light">Greeting</p>
-            </div>
-            <div class="card-body bg-white">
+    <div class="col-sm-6">
+        <div class="row">
+            <div class="col-sm-12">
                 <form asp-action="AddGreeting" method="post">
-                    <div class="input-group mb-3">
-                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required>
-                    </div>
-                    <div class="input-group mb-3">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Greeting</span>
+                        </div>
+                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required autofocus>
                         <input type="text" name="Template" class="form-control" placeholder="Template" value="" required>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary btn-block" type="submit">Add</button>
+                        </div>
                     </div>
-
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">Add</button>
                 </form>
             </div>
         </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var greeting in Model.Item1)
+                    {
+                        <tr>
+                            <td>@greeting.Nickname</td>
+                            <td>@greeting.Template</td>
+                            <td>
+                                <form action="/ts/greeting/@greeting.Id/delete" method="post">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="col"></div>
-</div>
 
-<div class="row">
-    <div class="col"></div>
-    <div class="col-8">
-        <div class="card border border-dark bg-dark">
-            <div class="card-header">
-                <p class="text-light">Leaving</p>
-            </div>
-            <div class="card-body bg-white">
+    <div class="col-sm-6">
+        <div class="row">
+            <div class="col-sm-12">
                 <form asp-action="AddLeaveMessage" method="post">
-                    <div class="input-group mb-3">
-                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required>
-                    </div>
-                    <div class="input-group mb-3">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Leaving</span>
+                        </div>
+                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required autofocus>
                         <input type="text" name="Template" class="form-control" placeholder="Template" value="" required>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary btn-block" type="submit">Add</button>
+                        </div>
                     </div>
-
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">Add</button>
                 </form>
             </div>
-            <div class="card-footer bg-light text-muted">
-                © @DateTime.Now.Year ahydrax
-            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var leaveMessage in Model.Item2)
+                    {
+                        <tr>
+                            <td>@leaveMessage.Nickname</td>
+                            <td>@leaveMessage.Template</td>
+                            <td>
+                                <form action="/ts/leave/@leaveMessage.Id/delete" method="post">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="col"></div>
 </div>

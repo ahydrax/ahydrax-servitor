@@ -4,13 +4,13 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using ahydrax.Servitor.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ahydrax.Servitor.Controllers
 {
     public class AuthenticationController : Controller
     {
-        private const string AuthenticationType = "ahdxsite";
         private readonly Settings _settings;
 
         public AuthenticationController(Settings settings)
@@ -34,9 +34,9 @@ namespace ahydrax.Servitor.Controllers
                 {
                     new Claim(ClaimTypes.Name, userLogin.Login)
                 };
-                var userIdentity = new ClaimsIdentity(claims, AuthenticationType);
+                var userIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var principal = new ClaimsPrincipal(userIdentity);
-                await HttpContext.SignInAsync(principal);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
                 return RedirectToAction("Home", "Home");
             }
 
@@ -54,7 +54,7 @@ namespace ahydrax.Servitor.Controllers
         [Route("/logout")]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(AuthenticationType);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("LoginPage");
         }
     }
