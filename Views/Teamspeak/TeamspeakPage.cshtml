@@ -1,6 +1,12 @@
 ﻿@model Tuple<List<ahydrax.Servitor.Actors.Greeting>, List<ahydrax.Servitor.Actors.LeaveMessage>>
 
 <div class="row">
+    <div class="col-sm-12">
+        <h2>Teamspeak messages management</h2>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-sm-6">
         <div class="row">
             <div class="col-sm-12">
@@ -9,7 +15,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Greeting</span>
                         </div>
-                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required autofocus>
+                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required>
                         <input type="text" name="Template" class="form-control" placeholder="Template" value="" required>
                         <div class="input-group-append">
                             <button class="btn btn-primary btn-block" type="submit">Add</button>
@@ -19,12 +25,12 @@
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-striped table-sm">
+            <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th></th>
+                        <th>Nickname</th>
+                        <th>Template</th>
+                        <th class="hdelete"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,7 +41,7 @@
                             <td>@greeting.Template</td>
                             <td>
                                 <form action="/ts/greeting/@greeting.Id/delete" method="post">
-                                    <button class="btn btn-sm btn-outline-primary" type="submit">delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">delete</button>
                                 </form>
                             </td>
                         </tr>
@@ -53,7 +59,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Leaving</span>
                         </div>
-                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required autofocus>
+                        <input type="text" name="Nickname" class="form-control" placeholder="Nickname" value="" required>
                         <input type="text" name="Template" class="form-control" placeholder="Template" value="" required>
                         <div class="input-group-append">
                             <button class="btn btn-primary btn-block" type="submit">Add</button>
@@ -63,12 +69,12 @@
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-striped table-sm">
+            <table class="table table-sm">
                 <thead>
                     <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th></th>
+                        <th>Nickname</th>
+                        <th>Template</th>
+                        <th class="hdelete"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,7 +85,7 @@
                             <td>@leaveMessage.Template</td>
                             <td>
                                 <form action="/ts/leave/@leaveMessage.Id/delete" method="post">
-                                    <button class="btn btn-sm btn-outline-primary" type="submit">delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">delete</button>
                                 </form>
                             </td>
                         </tr>

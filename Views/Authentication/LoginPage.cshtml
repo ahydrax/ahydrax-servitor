@@ -1,36 +1,16 @@
 ﻿@model ahydrax.Servitor.Models.UserLogin
 
-<div class="row">
-    <div class="col"></div>
-    <div class="col-8">
-        <div class="card border border-dark bg-dark">
-            <div class="card-header">
-                <p class="text-light">Authentication</p>
-            </div>
-            <div class="card-body bg-white">
-                <form asp-action="Login" method="post" asp-antiforgery="true">
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="addon">@@</span>
-                        </div>
-                        <input type="text" id="Login" asp-for="Login" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="addon" required autofocus>
-                    </div>
-                    <div class="input-group mb-3">
-                        <input type="password" id="Password" asp-for="Password" class="form-control" placeholder="Password" aria-label="Username" required>
-                    </div>
+<form class="form-signin" asp-action="Login" method="post" asp-antiforgery="true">
+    <h1 class="h3 mb-3 font-weight-normal">Authentication</h1>
+    <input type="text" asp-for="Login" class="form-control form-control-lg" placeholder="Username" required autofocus>
+    <input type="password" asp-for="Password" class="form-control form-control-lg" placeholder="Password" required>
 
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
-
-                    @if (Model?.Reason != null)
-                    {
-                        <p class="font-weight-normal text-danger">@Model.Reason</p>
-                    }
-                </form>
-            </div>
-            <div class="card-footer bg-light text-muted">
-                © @DateTime.Now.Year ahydrax
-            </div>
+    @if (Model?.Reason != null)
+    {
+        <div class="checkbox mb-3">
+            <p class="font-weight-normal text-danger">@Model.Reason</p>
         </div>
-    </div>
-    <div class="col"></div>
-</div>
+    }
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
+</form>
