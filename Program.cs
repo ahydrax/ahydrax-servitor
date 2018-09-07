@@ -24,6 +24,16 @@ namespace ahydrax.Servitor
                         options.FileName = "log-";
                         options.FileSizeLimit = 20 * 1024 * 1024;
                     });
+                    x.AddFilter(level =>
+                        level == LogLevel.Error ||
+                        level == LogLevel.Critical ||
+                        level == LogLevel.Warning)
+                        .AddFile(options =>
+                        {
+                            options.LogDirectory = "logs";
+                            options.FileName = "errors-";
+                            options.FileSizeLimit = 20 * 1024 * 1024;
+                        });
                 })
                 .UseStartup<Startup>()
                 .UseKestrel(options => options.ListenLocalhost(8088));

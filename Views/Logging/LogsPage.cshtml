@@ -1,0 +1,29 @@
+﻿@model List<string>
+
+<div class="row">
+    <div class="col-sm-12">
+        <h2>Bot logs</h2>
+        <a href="/logs/download">Download</a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Errors &amp; Warnings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        <tr>
+                            <td>@log</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
