@@ -172,15 +172,10 @@ namespace ahydrax.Servitor.Actors
 
         private string FindAppropriateGreeting(string nickname)
         {
-            var greetings = _greetingsCollection.Find(x => x.Nickname == nickname).ToList();
+            var greetings = _greetingsCollection.Find(x => x.Nickname == nickname || x.Nickname == "all").ToList();
             if (greetings.Count == 0)
             {
-                greetings = _greetingsCollection.Find(x => x.Nickname == "all").ToList();
-            }
-
-            if (greetings.Count == 0)
-            {
-                return "{0} entered teamspeak.";
+                return "{0} entered teamspeak";
             }
 
             var greeting = greetings[Random.Next(greetings.Count)];
@@ -190,12 +185,7 @@ namespace ahydrax.Servitor.Actors
 
         private string FindAppropriateLeaveMessage(string nickname)
         {
-            var leaveMessages = _leaveMessagesCollection.Find(x => x.Nickname == nickname).ToList();
-            if (leaveMessages.Count == 0)
-            {
-                leaveMessages = _leaveMessagesCollection.Find(x => x.Nickname == "all").ToList();
-            }
-
+            var leaveMessages = _leaveMessagesCollection.Find(x => x.Nickname == nickname || x.Nickname == "all").ToList();
             if (leaveMessages.Count == 0)
             {
                 return "{0} left teamspeak";
