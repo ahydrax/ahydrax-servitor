@@ -1,0 +1,47 @@
+﻿@model bool
+
+<div class="row">
+    <div class="col-sm-12">
+        <h2>Teamspeak bot status</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        @if (Model)
+        {
+            <div class="alert alert-success" role="alert">
+                Running
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert">
+                Down
+            </div>
+        }
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6">
+        @if (Model)
+        {
+            <form asp-action="StopTsBot" method="post">
+
+                <button class="btn btn-danger btn-block" type="submit">Stop</button>
+            </form>
+        }
+        else
+        {
+            <form asp-action="StartTsBot" method="post">
+                <button class="btn btn-success btn-block" type="submit">Start</button>
+            </form>
+        }
+    </div>
+    <div class="col-sm-6">
+        <form asp-action="ReloadTsBot" method="post">
+            <div class="input-group">
+                <button class="btn btn-primary btn-block" type="submit">Reload</button>
+            </div>
+        </form>
+    </div>
+</div>

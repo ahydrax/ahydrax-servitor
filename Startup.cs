@@ -13,6 +13,21 @@ namespace ahydrax.Servitor
 {
     public class Startup
     {
+        private const string AkkaConfig = @"
+akka {
+    loggers = [""ahydrax.Servitor.Actors.LoggingActor, ahydrax-servitor""]
+    loglevel = DEBUG
+    actor { 
+        debug {  
+              receive = on 
+              autoreceive = on
+              lifecycle = on
+              event-stream = on
+              unhandled = on
+        }
+}
+";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -34,7 +49,7 @@ namespace ahydrax.Servitor
 
             var db = new LiteDatabase(@"data.db");
             var settings = Configuration.Get<Settings>();
-            var actorSystem = ActorSystem.Create("ahydrax-servitor");
+            var actorSystem = ActorSystem.Create("ahydrax-servitor", AkkaConfig);
 
             actorSystem.ActorOf(
                 Props.Create(() => new TelegramMessageChannel(settings)),
@@ -61,12 +76,10 @@ namespace ahydrax.Servitor
             services.AddLogging();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ActorSystem actorSystem)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            // Add logging to akka
-            actorSystem.ActorOf(
-                Props.Create(() => new LoggingActor(loggerFactory.CreateLogger("akka"))),
-                nameof(LoggingActor));
+            // Incredibly stupid akka api can't do DI.
+            LoggingActor.Logger = loggerFactory.CreateLogger("akka");
 
             if (env.IsDevelopment())
             {

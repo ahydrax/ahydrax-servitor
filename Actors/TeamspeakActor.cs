@@ -31,7 +31,6 @@ namespace ahydrax.Servitor.Actors
             _settings = settings;
             _system = Context.System;
             _logger = Context.GetLogger();
-            _system = Context.System;
             _greetingsCollection = db.GetCollection<Greeting>();
             _greetingsCollection.EnsureIndex(x => x.Nickname);
 
@@ -39,6 +38,7 @@ namespace ahydrax.Servitor.Actors
             _leaveMessagesCollection.EnsureIndex(x => x.Nickname);
 
             ReceiveAsync<MessageArgs>(RespondWhoIsInTeamspeak);
+            ReceiveAsync<ActorFailed>(ActorFailed);
             ReceiveAsync<ActorFailed>(ActorFailed);
         }
 
@@ -80,16 +80,29 @@ namespace ahydrax.Servitor.Actors
             _timer = new Timer(Pulse, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         }
 
+        protected override void PostStop()
+        {
+            DisposeClient();
+        }
+
         private void DisposeClient()
         {
             _logger.Info("Client disposal initiated");
             _timer?.Dispose();
             _connected = false;
-            _teamSpeakClient.Unsubscribe<ClientEnterView>();
-            _teamSpeakClient.Unsubscribe<ClientLeftView>();
-            _teamSpeakClient.Client?.Dispose();
+            try
+            {
+                _teamSpeakClient.Unsubscribe<ClientEnterView>();
+                _teamSpeakClient.Unsubscribe<ClientLeftView>();
+                _logger.Info("Client unsubscribed");
+            }
+            finally
+            {
+                _teamSpeakClient.Client?.Dispose();
+                _logger.Info("Client disposed");
+            }
             _teamSpeakClient = null;
-            _logger.Info("Client unsubscribed");
+            _logger.Info("Actor disposed");
         }
 
         private async Task RespondWhoIsInTeamspeak(MessageArgs arg)

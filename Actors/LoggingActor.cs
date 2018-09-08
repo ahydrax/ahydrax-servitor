@@ -6,13 +6,14 @@ namespace ahydrax.Servitor.Actors
 {
     public sealed class LoggingActor : ReceiveActor
     {
-
-        public LoggingActor(ILogger logger)
+        public static ILogger Logger;
+        
+        public LoggingActor()
         {
-            Receive<Debug>(x => logger.LogDebug(x.ToString()));
-            Receive<Error>(x => logger.LogError(x.ToString()));
-            Receive<Info>(x => logger.LogInformation(x.ToString()));
-            Receive<Warning>(x => logger.LogWarning(x.ToString()));
+            Receive<Debug>(x => Logger?.LogDebug(x.ToString()));
+            Receive<Error>(x => Logger?.LogError(x.ToString()));
+            Receive<Info>(x => Logger?.LogInformation(x.ToString()));
+            Receive<Warning>(x => Logger?.LogWarning(x.ToString()));
             Receive<InitializeLogger>(m =>
             {
                 Sender.Tell(new LoggerInitialized());
