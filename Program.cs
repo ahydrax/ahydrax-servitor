@@ -17,17 +17,14 @@ namespace ahydrax.Servitor
                 .ConfigureAppConfiguration(x => x.AddJsonFile("appsecrets.json"))
                 .ConfigureLogging(x =>
                 {
-                    x.AddConsole();
-                    x.AddFile(options =>
+                    x.SetMinimumLevel(LogLevel.Trace).AddConsole();
+                    x.SetMinimumLevel(LogLevel.Debug).AddFile(options =>
                     {
                         options.LogDirectory = "logs";
                         options.FileName = "log-";
                         options.FileSizeLimit = 20 * 1024 * 1024;
                     });
-                    x.AddFilter(level =>
-                        level == LogLevel.Error ||
-                        level == LogLevel.Critical ||
-                        level == LogLevel.Warning)
+                    x.SetMinimumLevel(LogLevel.Warning)
                         .AddFile(options =>
                         {
                             options.LogDirectory = "logs";

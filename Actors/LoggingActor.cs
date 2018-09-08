@@ -6,7 +6,7 @@ namespace ahydrax.Servitor.Actors
 {
     public sealed class LoggingActor : ReceiveActor
     {
-        public static ILogger Logger;
+        public static ILogger Logger { get; set; }
         
         public LoggingActor()
         {
