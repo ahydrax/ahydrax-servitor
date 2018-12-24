@@ -1,6 +1,6 @@
 ﻿using Akka.Actor;
 
-namespace ahydrax.Servitor.Actors
+namespace ahydrax.Servitor.Extensions
 {
     internal static class ActorSelectionExtensions
     {

@@ -1,11 +1,11 @@
 ﻿using System;
+using ahydrax.Servitor.Extensions;
 using Akka.Actor;
 
 namespace ahydrax.Servitor.Actors
 {
     public class CatStatusResponder : ReceiveActor
     {
-        private static readonly Random Random = new Random();
         private static readonly string[] Replies = {
             "Ларис, я занят",
             "У меня митинг",
@@ -24,14 +24,17 @@ namespace ahydrax.Servitor.Actors
             "Кот хищник"
         };
 
+        private readonly Random _random;
+
         public CatStatusResponder()
         {
+            _random = new Random();
             Receive<MessageArgs>(Respond);
         }
 
         private bool Respond(MessageArgs obj)
         {
-            var randomIndex = Random.Next(0, Replies.Length);
+            var randomIndex = _random.Next(0, Replies.Length);
             var reply = Replies[randomIndex];
             Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(obj.ChatId, reply));
             return true;

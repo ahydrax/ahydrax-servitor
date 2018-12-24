@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using ahydrax.Servitor.Extensions;
 using Akka.Actor;
 using Akka.Event;
 using Telegram.Bot;
@@ -39,7 +40,7 @@ namespace ahydrax.Servitor.Actors
         private void OnMessage(object sender, MessageEventArgs e)
         {
             _logger.Info("Message arrived '{0}' from {1}", e.Message.Text, e.Message.From.Id);
-            _system.ActorSelection("user/" + nameof(TelegramMessageRouter)).Tell(e.Message);
+            _system.SelectActor<TelegramMessageRouter>().Tell(e.Message);
         }
 
         private Task SendMessageInChat(MessageArgs<string> arg)

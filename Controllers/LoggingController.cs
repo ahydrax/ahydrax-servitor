@@ -23,17 +23,31 @@ namespace ahydrax.Servitor.Controllers
         }
 
         [HttpGet]
-        [Route("/logs/file")]
+        [Route("/logs/all")]
         public async Task<IActionResult> GetLogs()
         {
             var logDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "logs");
             var directoryInfo = new DirectoryInfo(logDirectoryPath);
 
-            var lastLogfile = directoryInfo.EnumerateFiles("*.txt").OrderBy(x => x.CreationTimeUtc).FirstOrDefault();
+            var lastLogfile = directoryInfo.EnumerateFiles("log-*.txt").OrderBy(x => x.CreationTimeUtc).FirstOrDefault();
             if (lastLogfile == null) return NotFound();
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(lastLogfile.FullName);
             return File(fileBytes, "application/text", "log.txt");
+        }
+
+        [HttpGet]
+        [Route("/logs/errors")]
+        public async Task<IActionResult> GetErrorLogs()
+        {
+            var logDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "logs");
+            var directoryInfo = new DirectoryInfo(logDirectoryPath);
+
+            var lastLogfile = directoryInfo.EnumerateFiles("errors-*.txt").OrderBy(x => x.CreationTimeUtc).FirstOrDefault();
+            if (lastLogfile == null) return NotFound();
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(lastLogfile.FullName);
+            return File(fileBytes, "application/text", "errors.txt");
         }
     }
 }

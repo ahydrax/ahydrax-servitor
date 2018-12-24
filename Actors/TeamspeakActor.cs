@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ahydrax.Servitor.Extensions;
 using Akka.Actor;
 using Akka.Event;
 using LiteDB;
@@ -15,6 +16,7 @@ namespace ahydrax.Servitor.Actors
     public class TeamspeakActor : ReceiveActor
     {
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
+        private readonly Random _random = new Random();
         private readonly ConcurrentDictionary<int, string> _nicknames;
         private readonly Settings _settings;
         private readonly ActorSystem _system;
@@ -38,14 +40,14 @@ namespace ahydrax.Servitor.Actors
             _leaveMessagesCollection.EnsureIndex(x => x.Nickname);
 
             ReceiveAsync<MessageArgs>(RespondWhoIsInTeamspeak);
-            ReceiveAsync<ActorFailed>(ActorFailed);
-            ReceiveAsync<ActorFailed>(ActorFailed);
         }
 
-        private async Task ActorFailed(ActorFailed arg)
+        protected override SupervisorStrategy SupervisorStrategy()
         {
-            DisposeClient();
-            await InternalStart();
+            return new OneForOneStrategy(
+                10,
+                TimeSpan.FromMinutes(1),
+                exception => Directive.Restart);
         }
 
         protected override void PreStart() => InternalStart().GetAwaiter().GetResult();
@@ -82,11 +84,6 @@ namespace ahydrax.Servitor.Actors
 
         protected override void PostStop()
         {
-            DisposeClient();
-        }
-
-        private void DisposeClient()
-        {
             _logger.Info("Client disposal initiated");
             _timer?.Dispose();
             _connected = false;
@@ -98,7 +95,7 @@ namespace ahydrax.Servitor.Actors
             }
             finally
             {
-                _teamSpeakClient.Client?.Dispose();
+                _teamSpeakClient?.Dispose();
                 _logger.Info("Client disposed");
             }
             _teamSpeakClient = null;
@@ -119,11 +116,12 @@ namespace ahydrax.Servitor.Actors
 
                 var message = clientNicknames.Length == 0 ? "в тс пусто." : string.Join("\r\n", clientNicknames);
 
-                GetTelegramActor().Tell(new MessageArgs<string>(arg.ChatId, message));
+                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, message));
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Error occured during querying teamspeak server");
+                Self.Tell(new ActorFailed("Error occured during querying teamspeak server"));
             }
             finally
             {
@@ -158,53 +156,44 @@ namespace ahydrax.Servitor.Actors
 
         private void UserLeft(IReadOnlyCollection<ClientLeftView> views)
         {
-            _logger.Info("user left");
             foreach (var clientLeftView in views)
             {
-                var nickname = _nicknames?[clientLeftView.Id] ?? "???";
+                var nickname = _nicknames[clientLeftView.Id] ?? "???";
                 var leaveMessage = FindAppropriateLeaveMessage(nickname);
-                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(leaveMessage, nickname)));
+                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(leaveMessage, nickname)));
+                _nicknames.TryRemove(clientLeftView.Id, out var _);
+                _logger.Info($"{nickname} has left");
             }
         }
 
         private void UserEntered(IReadOnlyCollection<ClientEnterView> collection)
         {
-            _logger.Info("user entered");
             foreach (var clientEnterView in collection)
             {
                 var nickname = clientEnterView.NickName;
                 var template = FindAppropriateGreeting(nickname);
-                GetTelegramActor().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(template, nickname)));
+                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(template, nickname)));
                 _nicknames.AddOrUpdate(clientEnterView.Id, nickname, (i, s) => clientEnterView.NickName);
+                _logger.Info($"{nickname} has entered");
             }
         }
 
-        private ActorSelection GetTelegramActor() => _system.ActorSelection("user/" + nameof(TelegramMessageChannel));
-
-        private static readonly Random Random = new Random();
-
+        private static readonly Greeting DefaultGreetMessage = new Greeting { Template = "{0} has entered teamspeak" };
         private string FindAppropriateGreeting(string nickname)
         {
-            var greetings = _greetingsCollection.Find(x => x.Nickname == nickname || x.Nickname == "all").ToList();
-            if (greetings.Count == 0)
-            {
-                return "{0} entered teamspeak";
-            }
-
-            var greeting = greetings[Random.Next(greetings.Count)];
+            var greeting = _greetingsCollection.FindRandomOrDefault(
+                x => x.Nickname == nickname || x.Nickname == "all",
+                DefaultGreetMessage);
 
             return greeting.Template;
         }
 
+        private static readonly LeaveMessage DefaultLeaveMessage = new LeaveMessage { Template = "{0} has left teamspeak" };
         private string FindAppropriateLeaveMessage(string nickname)
         {
-            var leaveMessages = _leaveMessagesCollection.Find(x => x.Nickname == nickname || x.Nickname == "all").ToList();
-            if (leaveMessages.Count == 0)
-            {
-                return "{0} left teamspeak";
-            }
-
-            var leaveMessage = leaveMessages[Random.Next(leaveMessages.Count)];
+            var leaveMessage = _leaveMessagesCollection.FindRandomOrDefault(
+                x => x.Nickname == nickname || x.Nickname == "all",
+                DefaultLeaveMessage);
 
             return leaveMessage.Template;
         }

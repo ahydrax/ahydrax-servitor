@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ahydrax.Servitor.Actors;
+using ahydrax.Servitor.Extensions;
 using Akka.Actor;
 using LiteDB;
 using Microsoft.AspNetCore.Mvc;

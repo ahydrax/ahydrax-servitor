@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Net;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,11 @@ namespace ahydrax.Servitor
                         });
                 })
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.ListenLocalhost(8088));
+                .UseKestrel((context, options) =>
+                {
+                    var settings = context.Configuration.Get<Settings>();
+                    var listenAddress = settings.BindAddress == "*" ? IPAddress.Any : IPAddress.Parse(settings.BindAddress);
+                    options.Listen(listenAddress, settings.BindPort);
+                });
     }
 }
