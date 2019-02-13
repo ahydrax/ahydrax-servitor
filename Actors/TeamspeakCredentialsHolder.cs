@@ -15,7 +15,7 @@ namespace ahydrax.Servitor.Actors
 
         private bool RespondTeamspeakCredentials(MessageArgs arg)
         {
-            var message = $"```Host: {_settings.TeamspeakHost}\r\nPassword: {_settings.TeamspeakPublicPassword}`";
+            var message = $"Host: {_settings.TeamspeakHost}\r\nPassword: {_settings.TeamspeakPublicPassword}";
             Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, message));
             return true;
         }
