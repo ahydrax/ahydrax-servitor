@@ -12,5 +12,6 @@
         public int TeamspeakPort { get; set; }
         public string TeamspeakUsername { get; set; }
         public string TeamspeakPassword { get; set; }
+        public string TeamspeakPublicPassword { get; set; }
     }
 }

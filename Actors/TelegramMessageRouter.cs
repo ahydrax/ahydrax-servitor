@@ -38,15 +38,15 @@ namespace ahydrax.Servitor.Actors
                     Context.System.SelectActor<TeamspeakActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
-                case "/chokot":
+                case "/teamspeak":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<CatStatusResponder>().Tell(new MessageArgs(arg.Chat.Id));
-                    return true;
-
+                    Context.System.SelectActor<TeamspeakCredentialsHolder>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;              
+                
                 case "/chatid":
                     Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
-
+                
                 default:
                     return true;
             }

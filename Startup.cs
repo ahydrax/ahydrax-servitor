@@ -60,8 +60,8 @@ akka {
                 nameof(TelegramMessageRouter));
 
             actorSystem.ActorOf(
-                Props.Create(() => new CatStatusResponder()),
-                nameof(CatStatusResponder));
+                Props.Create(() => new TeamspeakCredentialsHolder(settings)),
+                nameof(TeamspeakCredentialsHolder));
 
             actorSystem.ActorOf(
                 Props.Create(() => new TeamspeakActor(settings, db)),
