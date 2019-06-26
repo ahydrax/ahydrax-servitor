@@ -41,16 +41,17 @@ namespace ahydrax.Servitor.Actors
                 case "/teamspeak":
                     if (!AuthorizedUser(message)) return true;
                     Context.System.SelectActor<TeamspeakCredentialsHolder>().Tell(new MessageArgs(arg.Chat.Id));
-                    return true;              
-                
-                case "/chatid":
-                    Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
-                    return true;    
-                
+                    return true;
+
                 case "/restart":
+                    if (!AuthorizedUser(message)) return true;
                     Context.System.SelectActor<RestartingActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
-                
+
+                case "/chatid":
+                    Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;
+
                 default:
                     return true;
             }
