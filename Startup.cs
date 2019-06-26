@@ -75,6 +75,14 @@ akka {
                 Props.Create(() => new RestartingActor(settings, db)),
                 nameof(RestartingActor));
 
+            actorSystem.ActorOf(
+                Props.Create(() => new HealthActor()),
+                nameof(HealthActor));
+
+            actorSystem.ActorOf(
+                Props.Create(() => new TempActor()),
+                nameof(TempActor));
+
             services.AddSingleton(actorSystem);
             services.AddSingleton(db);
             services.AddLogging();

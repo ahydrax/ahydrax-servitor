@@ -48,6 +48,16 @@ namespace ahydrax.Servitor.Actors
                     Context.System.SelectActor<RestartingActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
+                case "/health":
+                    if (!AuthorizedUser(message)) return true;
+                    Context.System.SelectActor<HealthActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;
+
+                case "/temp":
+                    if (!AuthorizedUser(message)) return true;
+                    Context.System.SelectActor<TempActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;
+
                 case "/chatid":
                     Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
