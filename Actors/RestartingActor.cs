@@ -20,22 +20,32 @@ namespace ahydrax.Servitor.Actors
 
         private async Task Restart(MessageArgs arg)
         {
-            var actor = await Context.System.SelectActor<TeamspeakActor>().ResolveOne(TimeSpan.Zero);
-            Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, "Restart requested"));
-            var stopped = await actor.GracefulStop(TimeSpan.FromSeconds(5));
-
-            if (!stopped)
+            try
             {
-                await actor.Ask(Kill.Instance);
+                var actor = await Context.System.SelectActor<TeamspeakActor>().ResolveOne(TimeSpan.Zero);
+                Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, "[RESTART_ACTOR] Teamspeak actor restart requested"));
+                var stopped = await actor.GracefulStop(TimeSpan.FromSeconds(5));
+
+                if (!stopped)
+                {
+                    await actor.Ask(Kill.Instance);
+                }
+
+                Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, "[RESTART_ACTOR] Actor stopped"));
+
+                Context.System.ActorOf(
+                    Props.Create(() => new TeamspeakActor(_settings, _database)),
+                    nameof(TeamspeakActor));
+
+                Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, "[RESTART_ACTOR] Actor restared"));
             }
+            catch (ActorNotFoundException)
+            {
 
-            Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, "Stopped"));
-
-            Context.System.ActorOf(
-                Props.Create(() => new TeamspeakActor(_settings, _database)),
-                nameof(TeamspeakActor));
-
-            Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(arg.ChatId, "Restared"));
+                Context.System.ActorOf(
+                    Props.Create(() => new TeamspeakActor(_settings, _database)),
+                    nameof(TeamspeakActor));
+            }
         }
     }
 }
