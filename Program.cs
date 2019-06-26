@@ -15,7 +15,6 @@ namespace ahydrax.Servitor
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(x => x.AddJsonFile("appsecrets.json"))
                 .ConfigureLogging(x =>
                 {
                     x.SetMinimumLevel(LogLevel.Trace).AddConsole();
@@ -37,8 +36,10 @@ namespace ahydrax.Servitor
                 .UseKestrel((context, options) =>
                 {
                     var settings = context.Configuration.Get<Settings>();
-                    var listenAddress = settings.BindAddress == "*" ? IPAddress.Any : IPAddress.Parse(settings.BindAddress);
-                    options.Listen(listenAddress, settings.BindPort);
+                    var listenAddress = settings.WebServer.IpAddress == "*"
+                        ? IPAddress.Any
+                        : IPAddress.Parse(settings.WebServer.IpAddress);
+                    options.Listen(listenAddress, settings.WebServer.Port);
                 });
     }
 }

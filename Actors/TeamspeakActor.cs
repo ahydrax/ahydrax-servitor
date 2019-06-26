@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ahydrax.Servitor.Extensions;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Pattern;
 using LiteDB;
 using TeamSpeak3QueryApi.Net.Specialized;
 using TeamSpeak3QueryApi.Net.Specialized.Notifications;
@@ -42,22 +43,17 @@ namespace ahydrax.Servitor.Actors
             ReceiveAsync<MessageArgs>(RespondWhoIsInTeamspeak);
         }
 
-        protected override SupervisorStrategy SupervisorStrategy()
-        {
-            return new OneForOneStrategy(
-                10,
-                TimeSpan.FromMinutes(1),
-                exception => Directive.Restart);
-        }
+        protected override SupervisorStrategy SupervisorStrategy() 
+            => new OneForOneStrategy(exception => Directive.Restart);
 
         protected override void PreStart() => InternalStart().GetAwaiter().GetResult();
 
         private async Task InternalStart()
         {
-            _teamSpeakClient = new TeamSpeakClient(_settings.TeamspeakHost, _settings.TeamspeakPort);
+            _teamSpeakClient = new TeamSpeakClient(_settings.Teamspeak.Host, _settings.Teamspeak.Port);
             _logger.Info("Starting teamspeak client...");
             await _teamSpeakClient.Connect();
-            await _teamSpeakClient.Login(_settings.TeamspeakUsername, _settings.TeamspeakPassword);
+            await _teamSpeakClient.Login(_settings.Teamspeak.Username, _settings.Teamspeak.Key);
             _logger.Info("Teamspeak bot connected");
 
             await _teamSpeakClient.UseServer(1);
@@ -160,7 +156,7 @@ namespace ahydrax.Servitor.Actors
             {
                 var nickname = _nicknames[clientLeftView.Id] ?? "???";
                 var leaveMessage = FindAppropriateLeaveMessage(nickname);
-                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(leaveMessage, nickname)));
+                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(_settings.Telegram.HostGroupId, string.Format(leaveMessage, nickname)));
                 _nicknames.TryRemove(clientLeftView.Id, out var _);
                 _logger.Info($"{nickname} has left");
             }
@@ -172,7 +168,7 @@ namespace ahydrax.Servitor.Actors
             {
                 var nickname = clientEnterView.NickName;
                 var template = FindAppropriateGreeting(nickname);
-                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, string.Format(template, nickname)));
+                _system.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(_settings.Telegram.HostGroupId, string.Format(template, nickname)));
                 _nicknames.AddOrUpdate(clientEnterView.Id, nickname, (i, s) => clientEnterView.NickName);
                 _logger.Info($"{nickname} has entered");
             }

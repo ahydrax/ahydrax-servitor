@@ -45,8 +45,8 @@ namespace ahydrax.Servitor.Controllers
 
         private bool ValidateCredentials(UserLogin userLogin)
         {
-            var loginMatched = _settings.Username.Equals(userLogin.Login, StringComparison.InvariantCulture);
-            var pwMatched = _settings.Password.Equals(userLogin.Password, StringComparison.InvariantCulture);
+            var loginMatched = _settings.WebServer.AdminPassword.Equals(userLogin.Login, StringComparison.InvariantCulture);
+            var pwMatched = _settings.WebServer.AdminPassword.Equals(userLogin.Password, StringComparison.InvariantCulture);
             return loginMatched && pwMatched;
         }
 

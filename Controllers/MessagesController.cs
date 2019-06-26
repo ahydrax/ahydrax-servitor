@@ -28,7 +28,7 @@ namespace ahydrax.Servitor.Controllers
             if (message.Text != null)
             {
                 var messageChannel = _actorSystem.SelectActor<TelegramMessageChannel>();
-                messageChannel.Tell(new MessageArgs<string>(_settings.TelegramHostGroupId, message.Text));
+                messageChannel.Tell(new MessageArgs<string>(_settings.Telegram.HostGroupId, message.Text));
             }
 
             return View("MessagesPage");

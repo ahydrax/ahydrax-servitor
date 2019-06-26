@@ -45,6 +45,10 @@ namespace ahydrax.Servitor.Actors
                 
                 case "/chatid":
                     Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;    
+                
+                case "/restart":
+                    Context.System.SelectActor<RestartingActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
                 
                 default:
@@ -54,7 +58,7 @@ namespace ahydrax.Servitor.Actors
 
         private bool AuthorizedUser(Message message)
         {
-            if (message.Chat.Id == _settings.TelegramHostGroupId) return true;
+            if (message.Chat.Id == _settings.Telegram.HostGroupId) return true;
             return _authorizedUsersCollection.Exists(x => x.Id == message.Chat.Id);
         }
     }

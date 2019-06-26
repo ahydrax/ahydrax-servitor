@@ -71,6 +71,10 @@ akka {
                 Props.Create(() => new TelegramMyIdResponder()),
                 nameof(TelegramMyIdResponder));
 
+            actorSystem.ActorOf(
+                Props.Create(() => new RestartingActor(settings, db)),
+                nameof(RestartingActor));
+
             services.AddSingleton(actorSystem);
             services.AddSingleton(db);
             services.AddLogging();
