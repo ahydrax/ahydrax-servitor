@@ -80,6 +80,10 @@ akka {
                 nameof(HealthActor));
 
             actorSystem.ActorOf(
+                Props.Create(() => new SelfieActor()),
+                nameof(SelfieActor));
+
+            actorSystem.ActorOf(
                 Props.Create(() => new TempActor()),
                 nameof(TempActor));
 

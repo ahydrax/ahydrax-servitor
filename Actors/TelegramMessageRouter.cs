@@ -58,6 +58,11 @@ namespace ahydrax.Servitor.Actors
                     Context.System.SelectActor<TempActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
+                case "/selfie":
+                    if (!AuthorizedUser(message)) return true;
+                    Context.System.SelectActor<SelfieActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;
+
                 case "/chatid":
                     Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;

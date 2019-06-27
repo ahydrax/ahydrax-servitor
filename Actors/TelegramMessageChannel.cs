@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ahydrax.Servitor.Extensions;
@@ -40,6 +40,13 @@ namespace ahydrax.Servitor.Actors
             _telegramClient.OnReceiveError += LogError;
 
             ReceiveAsync<MessageArgs<string>>(SendMessageInChat);
+            ReceiveAsync<MessageArgs<byte[]>>(SendContentInChat);
+        }
+
+        private Task SendContentInChat(MessageArgs<byte[]> arg)
+        {
+            return _telegramClient.SendPhotoAsync(new ChatId(arg.ChatId),
+                new InputMedia(new MemoryStream(arg.Content), "selfie.jpg"));
         }
 
         private static TelegramBotClient CreateClientWithoutProxy(TelegramSettings settings)
