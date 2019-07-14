@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using ahydrax.Servitor.Extensions;
+using ahydrax.Servitor.Actors.Utility;
 using ahydrax.Servitor.Utils;
 using Akka.Actor;
 using File = System.IO.File;
@@ -19,7 +19,7 @@ namespace ahydrax.Servitor.Actors
         {
             try
             {
-                var cmd = @"fswebcam -r 1280x720 /tmp/selfie.jpg --title " + $"\"{DateTime.Now:R}\"";
+                var cmd = $@"fswebcam -r 1280x720 /tmp/selfie.png -q --info ""{DateTime.Now:R}"" --png -1 --title ""ahydrax-servitor""";
                 var escapedArgs = cmd.Replace("\"", "\\\"");
 
                 var process = new Process
@@ -33,20 +33,18 @@ namespace ahydrax.Servitor.Actors
                     }
                 };
                 process.Start();
+                Context.System.Actor<TelegramMessageChannel>()
+                    .Tell(new MessageArgs<string>(arg.ChatId, "[SELFIE_ACTOR] Working..."));
                 await process.WaitForExitAsync();
+                var content = await File.ReadAllBytesAsync("/tmp/selfie.png");
 
-                Context.System.SelectActor<TelegramMessageChannel>()
-                    .Tell(new MessageArgs<string>(arg.ChatId, "[SELFIE_ACTOR] Done"));
-
-                var content = await File.ReadAllBytesAsync("/tmp/selfie.jpg");
-
-                Context.System.SelectActor<TelegramMessageChannel>()
+                Context.System.Actor<TelegramMessageChannel>()
                     .Tell(new MessageArgs<byte[]>(arg.ChatId, content));
             }
-            catch
+            catch (Exception e)
             {
-                Context.System.SelectActor<TelegramMessageChannel>()
-                    .Tell(new MessageArgs<string>(arg.ChatId, "[SELFIE_ACTOR] Not running on raspberry pi"));
+                Context.System.Actor<TelegramMessageChannel>()
+                    .Tell(new MessageArgs<string>(arg.ChatId, $"[SELFIE_ACTOR] Error occured\n{e.Message}\n{e.StackTrace}"));
             }
         }
     }

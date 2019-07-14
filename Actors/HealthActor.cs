@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using ahydrax.Servitor.Extensions;
+using ahydrax.Servitor.Actors.Utility;
 using Akka.Actor;
 
 namespace ahydrax.Servitor.Actors
@@ -30,7 +30,7 @@ namespace ahydrax.Servitor.Actors
             var cpuPercentage = (decimal)consumedCpuTime.TotalMilliseconds * 1.0M / (5000M * _cpus);
             var bytesConsumed = _process.WorkingSet64;
 
-            Context.System.SelectActor<TelegramMessageChannel>()
+            Context.System.Actor<TelegramMessageChannel>()
                 .Tell(new MessageArgs<string>(arg.ChatId,
                     $"[HEALTH_ACTOR] In last 5 seconds: CPU {cpuPercentage * 100:F1}% Mem: {ByteSize(bytesConsumed)}"));
         }

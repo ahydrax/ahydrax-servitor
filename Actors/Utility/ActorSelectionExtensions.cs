@@ -1,10 +1,10 @@
 ﻿using Akka.Actor;
 
-namespace ahydrax.Servitor.Extensions
+namespace ahydrax.Servitor.Actors.Utility
 {
     internal static class ActorSelectionExtensions
     {
-        public static ActorSelection SelectActor<T>(this ActorSystem system) where T : ReceiveActor
+        public static ActorSelection Actor<T>(this ActorSystem system) where T : ReceiveActor
             => system.ActorSelection("user/" + typeof(T).Name);
     }
 }

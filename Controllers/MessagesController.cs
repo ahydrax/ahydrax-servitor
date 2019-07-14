@@ -1,4 +1,5 @@
 ﻿using ahydrax.Servitor.Actors;
+using ahydrax.Servitor.Actors.Utility;
 using ahydrax.Servitor.Extensions;
 using ahydrax.Servitor.Models;
 using Akka.Actor;
@@ -27,7 +28,7 @@ namespace ahydrax.Servitor.Controllers
         {
             if (message.Text != null)
             {
-                var messageChannel = _actorSystem.SelectActor<TelegramMessageChannel>();
+                var messageChannel = _actorSystem.Actor<TelegramMessageChannel>();
                 messageChannel.Tell(new MessageArgs<string>(_settings.Telegram.HostGroupId, message.Text));
             }
 

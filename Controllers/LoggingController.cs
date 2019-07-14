@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +12,8 @@ namespace ahydrax.Servitor.Controllers
         [Route("/logs")]
         public async Task<IActionResult> LogsPage()
         {
-            var logDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "logs");
-            var directoryInfo = new DirectoryInfo(logDirectoryPath);
-
-            var lastLogfile = directoryInfo.EnumerateFiles("errors-*.txt").OrderBy(x => x.CreationTimeUtc).FirstOrDefault();
-            if (lastLogfile == null) return NotFound();
-
-            var lastLines = (await System.IO.File.ReadAllLinesAsync(lastLogfile.FullName)).Reverse().Take(50).ToList();
+            var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", $"{DateTime.Today:yyyyMMdd}.txt");
+            var lastLines = (await System.IO.File.ReadAllLinesAsync(logFilePath)).Reverse().Take(50).ToList();
 
             return View(lastLines);
         }
@@ -26,13 +22,8 @@ namespace ahydrax.Servitor.Controllers
         [Route("/logs/all")]
         public async Task<IActionResult> GetLogs()
         {
-            var logDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "logs");
-            var directoryInfo = new DirectoryInfo(logDirectoryPath);
-
-            var lastLogfile = directoryInfo.EnumerateFiles("log-*.txt").OrderBy(x => x.CreationTimeUtc).FirstOrDefault();
-            if (lastLogfile == null) return NotFound();
-
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(lastLogfile.FullName);
+            var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", $"{DateTime.Today:yyyyMMdd}.txt");
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(logFilePath);
             return File(fileBytes, "application/text", "log.txt");
         }
 

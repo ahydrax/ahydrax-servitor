@@ -1,4 +1,4 @@
-﻿using ahydrax.Servitor.Extensions;
+﻿using ahydrax.Servitor.Actors.Utility;
 using Akka.Actor;
 
 namespace ahydrax.Servitor.Actors
@@ -12,7 +12,7 @@ namespace ahydrax.Servitor.Actors
 
         private bool Respond(MessageArgs obj)
         {
-            Context.System.SelectActor<TelegramMessageChannel>().Tell(new MessageArgs<string>(obj.ChatId, obj.ChatId.ToString()));
+            Context.System.Actor<TelegramMessageChannel>().Tell(new MessageArgs<string>(obj.ChatId, obj.ChatId.ToString()));
             return true;
         }
     }

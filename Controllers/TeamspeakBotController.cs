@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ahydrax.Servitor.Actors;
-using ahydrax.Servitor.Extensions;
+using ahydrax.Servitor.Actors.Utility;
 using Akka.Actor;
-using LiteDB;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -12,19 +11,11 @@ namespace ahydrax.Servitor.Controllers
     public class TeamspeakBotController : AuthorizedController
     {
         private readonly ActorSystem _actorSystem;
-        private readonly Settings _settings;
-        private readonly LiteDatabase _db;
         private readonly ILogger<TeamspeakBotController> _logger;
 
-        public TeamspeakBotController(
-            ActorSystem actorSystem,
-            Settings settings,
-            LiteDatabase db,
-            ILogger<TeamspeakBotController> logger)
+        public TeamspeakBotController(ActorSystem actorSystem, ILogger<TeamspeakBotController> logger)
         {
             _actorSystem = actorSystem;
-            _settings = settings;
-            _db = db;
             _logger = logger;
         }
 
@@ -34,7 +25,7 @@ namespace ahydrax.Servitor.Controllers
         {
             try
             {
-                var bot = await _actorSystem.SelectActor<TeamspeakActor>().ResolveOne(TimeSpan.Zero);
+                var bot = await _actorSystem.Actor<TeamspeakActor>().ResolveOne(TimeSpan.Zero);
                 return View(!bot.IsNobody());
             }
             catch (ActorNotFoundException)
@@ -73,16 +64,14 @@ namespace ahydrax.Servitor.Controllers
         private void StartBot()
         {
             _logger.LogWarning("Bot starting");
-            _actorSystem.ActorOf(
-                Props.Create(() => new TeamspeakActor(_settings, _db)),
-                nameof(TeamspeakActor));
+            _actorSystem.CreateActor<TeamspeakActor>();
             _logger.LogWarning("Bot started");
         }
 
         private async Task StopBot()
         {
             _logger.LogWarning("Bot stopping");
-            var bot = await _actorSystem.SelectActor<TeamspeakActor>().ResolveOne(TimeSpan.Zero);
+            var bot = await _actorSystem.Actor<TeamspeakActor>().ResolveOne(TimeSpan.Zero);
             var stopped = await bot.GracefulStop(TimeSpan.FromSeconds(5));
             if (!stopped)
             {

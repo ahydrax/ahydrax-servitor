@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading.Tasks;
+using ahydrax.Servitor.Actors.Utility;
 using ahydrax.Servitor.Extensions;
 using ahydrax.Servitor.Utils;
 using Akka.Actor;
@@ -35,12 +36,12 @@ namespace ahydrax.Servitor.Actors
                 await process.WaitForExitAsync();
                 var output = process.StandardOutput.ReadToEnd();
 
-                Context.System.SelectActor<TelegramMessageChannel>()
+                Context.System.Actor<TelegramMessageChannel>()
                     .Tell(new MessageArgs<string>(arg.ChatId, "[TEMP_ACTOR] " + output));
             }
             catch
             {
-                Context.System.SelectActor<TelegramMessageChannel>()
+                Context.System.Actor<TelegramMessageChannel>()
                     .Tell(new MessageArgs<string>(arg.ChatId, "[TEMP_ACTOR] Not running on raspberry pi"));
             }
         }

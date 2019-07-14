@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using ahydrax.Servitor.Extensions;
+using ahydrax.Servitor.Actors.Utility;
 using ahydrax.Servitor.Models;
 using Akka.Actor;
 using Akka.Event;
@@ -35,36 +35,41 @@ namespace ahydrax.Servitor.Actors
             {
                 case "/whots":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<TeamspeakActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<TeamspeakActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/teamspeak":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<TeamspeakCredentialsHolder>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<TeamspeakCredentialsHolder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/restart":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<RestartingActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<RestartingActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/health":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<HealthActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<HealthActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/temp":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<TempActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<TempActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/selfie":
                     if (!AuthorizedUser(message)) return true;
-                    Context.System.SelectActor<SelfieActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<SelfieActor>().Tell(new MessageArgs(arg.Chat.Id));
+                    return true;
+
+                case "/failfast":
+                    if (!AuthorizedUser(message)) return true;
+                    Context.System.Actor<FailfastActor>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 case "/chatid":
-                    Context.System.SelectActor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
+                    Context.System.Actor<TelegramMyIdResponder>().Tell(new MessageArgs(arg.Chat.Id));
                     return true;
 
                 default:

@@ -1,8 +1,10 @@
-﻿using System.Net;
+﻿using System;
+using System.IO;
+using System.Net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace ahydrax.Servitor
 {
@@ -15,22 +17,17 @@ namespace ahydrax.Servitor
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .ConfigureLogging(x =>
+                .UseSerilog((context, configuration) =>
                 {
-                    x.SetMinimumLevel(LogLevel.Trace).AddConsole();
-                    x.SetMinimumLevel(LogLevel.Debug).AddFile(options =>
+                    if (Environment.UserInteractive)
                     {
-                        options.LogDirectory = "logs";
-                        options.FileName = "log-";
-                        options.FileSizeLimit = 20 * 1024 * 1024;
-                    });
-                    x.SetMinimumLevel(LogLevel.Warning)
-                        .AddFile(options =>
-                        {
-                            options.LogDirectory = "logs";
-                            options.FileName = "errors-";
-                            options.FileSizeLimit = 20 * 1024 * 1024;
-                        });
+                        configuration.MinimumLevel.Debug().WriteTo.ColoredConsole();
+                    }
+
+                    var logPathTemplate = Path.Join(context.HostingEnvironment.ContentRootPath, "logs", ".txt");
+
+                    configuration.MinimumLevel.Information().WriteTo
+                        .File(logPathTemplate, rollingInterval: RollingInterval.Day);
                 })
                 .UseStartup<Startup>()
                 .UseKestrel((context, options) =>

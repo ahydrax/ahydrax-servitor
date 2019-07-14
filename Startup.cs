@@ -1,41 +1,32 @@
-﻿using ahydrax.Servitor.Actors;
+﻿using System;
+using ahydrax.Servitor.Actors;
+using ahydrax.Servitor.Actors.Utility;
+using ahydrax.Servitor.Recurring;
+using ahydrax.Servitor.Services;
 using Akka.Actor;
+using Akka.DI.Core;
 using LiteDB;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace ahydrax.Servitor
 {
-    public class Startup
+    public class Startup : IStartup
     {
-        private const string AkkaConfig = @"
-akka {
-    loggers = [""ahydrax.Servitor.Actors.LoggingActor, ahydrax-servitor""]
-    loglevel = DEBUG
-    actor { 
-        debug {  
-              receive = on 
-              autoreceive = on
-              lifecycle = on
-              event-stream = on
-              unhandled = on
-        }
-}
-";
+        private readonly IConfiguration _configuration;
+        private readonly IHostingEnvironment _environment;
+        private IServiceProvider _serviceProvider;
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
-            Configuration = configuration;
+            _configuration = configuration;
+            _environment = environment;
         }
 
-        public IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -44,60 +35,51 @@ akka {
                     options.LogoutPath = "/logout";
                 });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddSingleton(Configuration.Get<Settings>());
+            services.AddMvc();
 
             var db = new LiteDatabase(@"data.db");
-            var settings = Configuration.Get<Settings>();
-            var actorSystem = ActorSystem.Create("ahydrax-servitor", AkkaConfig);
-
-            actorSystem.ActorOf(
-                Props.Create(() => new TelegramMessageChannel(settings)),
-                nameof(TelegramMessageChannel));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new TelegramMessageRouter(settings, db)),
-                nameof(TelegramMessageRouter));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new TeamspeakCredentialsHolder(settings)),
-                nameof(TeamspeakCredentialsHolder));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new TeamspeakActor(settings, db)),
-                nameof(TeamspeakActor));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new TelegramMyIdResponder()),
-                nameof(TelegramMyIdResponder));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new RestartingActor(settings, db)),
-                nameof(RestartingActor));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new HealthActor()),
-                nameof(HealthActor));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new SelfieActor()),
-                nameof(SelfieActor));
-
-            actorSystem.ActorOf(
-                Props.Create(() => new TempActor()),
-                nameof(TempActor));
-
-            services.AddSingleton(actorSystem);
             services.AddSingleton(db);
+
+            var settings = _configuration.Get<Settings>();
+            services.AddSingleton(settings);
+
+            var actorSystem = ActorSystem.Create("ahydrax-servitor");
+            services.AddSingleton(actorSystem);
+
+            services.AddHostedService<TeamspeakPulseService>();
+            services.AddSingleton<GreetingService>();
+
+            services.AddTransient<TelegramMessageChannel>();
+            services.AddTransient<TelegramMessageRouter>();
+            services.AddTransient<TeamspeakCredentialsHolder>();
+            services.AddTransient<TeamspeakActor>();
+            services.AddTransient<TelegramMyIdResponder>();
+            services.AddTransient<HealthActor>();
+            services.AddTransient<SelfieActor>();
+            services.AddTransient<TempActor>();
+            services.AddTransient<FailfastActor>();
+
             services.AddLogging();
+            _serviceProvider = services.BuildServiceProvider(true);
+            actorSystem.AddDependencyResolver(new MicrosoftDependencyResolver(_serviceProvider));
+
+            return _serviceProvider;
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
-            // Incredibly stupid akka api can't do DI.
-            LoggingActor.Logger = loggerFactory.CreateLogger("akka");
+            var system = _serviceProvider.GetRequiredService<ActorSystem>();
+            system.CreateActor<TelegramMessageChannel>();
+            system.CreateActor<TelegramMessageRouter>();
+            system.CreateActor<TeamspeakCredentialsHolder>();
+            system.CreateActor<TeamspeakActor>();
+            system.CreateActor<TelegramMyIdResponder>();
+            system.CreateActor<HealthActor>();
+            system.CreateActor<SelfieActor>();
+            system.CreateActor<TempActor>();
+            system.CreateActor<FailfastActor>();
 
-            if (env.IsDevelopment())
+            if (_environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
