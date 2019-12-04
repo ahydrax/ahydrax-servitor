@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>ahydrax.Servitor</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>8</LangVersion>
     <UserSecretsId>94065f34-76f8-4163-ad95-2c33ffcae6c5</UserSecretsId>
   </PropertyGroup>
 

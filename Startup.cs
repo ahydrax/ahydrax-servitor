@@ -11,16 +11,17 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace ahydrax.Servitor
 {
     public class Startup : IStartup
     {
         private readonly IConfiguration _configuration;
-        private readonly IHostingEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
         private IServiceProvider _serviceProvider;
 
-        public Startup(IConfiguration configuration, IHostingEnvironment environment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             _configuration = configuration;
             _environment = environment;
@@ -35,7 +36,7 @@ namespace ahydrax.Servitor
                     options.LogoutPath = "/logout";
                 });
 
-            services.AddMvc();
+            services.AddControllersWithViews();
 
             var db = new LiteDatabase(@"data.db");
             services.AddSingleton(db);
@@ -90,10 +91,12 @@ namespace ahydrax.Servitor
             }
 
             app.UseAuthentication();
+            app.UseRouting();
+            app.UseAuthorization();
             app.UseCookiePolicy();
+            app.UseEndpoints(x => x.MapControllers());
             app.UseStaticFiles();
             app.UseStatusCodePagesWithReExecute("/error/{0}");
-            app.UseMvc();
         }
     }
 }
